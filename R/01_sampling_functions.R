@@ -256,7 +256,7 @@ sampling_model <- function( data_list,
   # Load stan model with cmdstanr
   stan_file <- system.file( model, package = "HETTMO")
   model_compiled = cmdstanr::cmdstan_model(stan_file = stan_file ,
-                                        include_paths = "inst",
+                                        #include_paths = "inst",
                                         force_recompile = TRUE)
 
   # prior predictive check
