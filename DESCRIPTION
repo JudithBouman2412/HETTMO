@@ -1,0 +1,16 @@
+Package: democmdstanr
+Type: Package
+Title: Demo package that depends on cmdstanr
+Version: 0.1.0
+Author: Rok Češnovar
+Maintainer: Rok Češnovar <rok.cesnovar@fri.uni-lj.si>
+Description: This package serves as an example on how to build
+    a package that depends on cmdstanr.
+License: BSD-4
+Encoding: UTF-8
+LazyData: true
+Imports:
+    cmdstanr
+RoxygenNote: 7.2.0
+Additional_repositories:
+    https://mc-stan.org/r-packages/
