@@ -10,7 +10,7 @@ bernoulli(y)
 \item{y}{The binary outcome of the trials.}
 }
 \value{
-The draws for the Bernoulli chance-of-success `theta` parameter.
+The draws for the Bernoulli chance-of-success \code{theta} parameter.
 }
 \description{
 Example function to run the example Bernoulli model

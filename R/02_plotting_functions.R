@@ -22,9 +22,9 @@ plot_fitsim = function(fit, data, params) {
 
   # posterior predictive check
   dat_ = data.frame(variable = "I_t_simulated", time = 1:length(data), null = "", median = data )
-  pred_ = fit$samples_posterior$summary(c("I_t_predicted")) %>%
+  pred_ = fit$samples_posterior$summary(c("I_t_predicted")) |>
     tidyr::separate(variable,"\\[|\\]",into=c("variable","time","null"))
-  post_ = fit$samples_prior$summary(c("I_t_predicted")) %>%
+  post_ = fit$samples_prior$summary(c("I_t_predicted")) |>
     tidyr::separate(variable,"\\[|\\]",into=c("variable","time","null"))
   g1 = ggplot2::ggplot() +
     ggplot2::geom_ribbon(data=post_,aes(x=as.numeric(time),ymin=q5,ymax=q95,fill="Prior predictive check"),alpha=.3) +
@@ -42,9 +42,9 @@ plot_fitsim = function(fit, data, params) {
     table_age_sex = tidyr::tibble(group=as.character(1:10),
                            age=rep(paste0("age_group_",1:5),2),
                            sex=rep(paste0("sex_",1:2),each=5))
-    dat_ = tidyr::separate(dat_,time,",",into=c("time","group")) %>% dplyr::left_join(table_age_sex,by="group")
-    pred_ = tidyr::separate(pred_,time,",",into=c("time","group")) %>% dplyr::left_join(table_age_sex,by="group")
-    post_ = tidyr::separate(post_,time,",",into=c("time","group")) %>% dplyr::left_join(table_age_sex,by="group")
+    dat_ = tidyr::separate(dat_,time,",",into=c("time","group")) |>  dplyr::left_join(table_age_sex,by="group")
+    pred_ = tidyr::separate(pred_,time,",",into=c("time","group")) |>  dplyr::left_join(table_age_sex,by="group")
+    post_ = tidyr::separate(post_,time,",",into=c("time","group")) |>  dplyr::left_join(table_age_sex,by="group")
     g1 = ggplot2::ggplot() +
       ggplot2::geom_ribbon(data=post_,aes(x=as.numeric(time),ymin=q5,ymax=q95,fill="Prior predictive check"),alpha=.3) +
       ggplot2::geom_ribbon(data=pred_,aes(x=as.numeric(time),ymin=q5,ymax=q95,fill="Posterior predictive check"),alpha=.3) +
@@ -67,22 +67,22 @@ plot_fitsim = function(fit, data, params) {
   sim_ = dplyr::as_tibble(rbind( "R0" = R0, "I0"=params$I0, "theta"=params$theta, "p_detect2" = params$p_detect2))
   colnames(sim_) <- "median"
 
-  sim_ = sim_ %>%
+  sim_ = sim_ |>
     dplyr::mutate(variable=median,
                   type="Chosen value",
                   median=median,q5=median,q95=median,
                   variable = c("R0", "I0", "theta", "p_detect2" ))
 
-  sim_ = sim_ %>% dplyr::mutate_at( "variable", as.character )
+  sim_ = sim_ |>  dplyr::mutate_at( "variable", as.character )
 
   post_ = fit$samples_posterior$summary(c("R0","I0_raw", "theta",  "p_detect2"
-  )) %>%
+  )) |>
     dplyr::mutate(type="Posterior distribution", median = median, q5 = q5, q95=q95)
 
-  prior_ = fit$samples_prior$summary(c("R0","I0_raw", "theta",  "p_detect2"))  %>%
+  prior_ = fit$samples_prior$summary(c("R0","I0_raw", "theta",  "p_detect2"))  |>
     dplyr::mutate(type="Prior distribution")
 
-  dat_g2 <- dplyr::bind_rows(sim_,post_,prior_) %>%
+  dat_g2 <- dplyr::bind_rows(sim_,post_,prior_) |>
     dplyr::mutate(type=factor(type,levels=c("Posterior distribution","Chosen value","Prior distribution")),
                   variable=gsub("_raw","",variable))
 
@@ -124,27 +124,27 @@ plot_comparesim = function(fit1, fit2, fit3 , data) {
   col_simul = "cyan3"
 
   # posterior predictive check
-  dat_ = fit1$samples_posterior$summary(c("I_t_simulated")) %>%
+  dat_ = fit1$samples_posterior$summary(c("I_t_simulated")) |>
     tidyr::separate(variable,"\\[|\\]",into=c("variable","time","null"))
   dat_$date = data$date
 
-  pred_1 = fit1$samples_prior$summary(c("I_t_predicted")) %>%
+  pred_1 = fit1$samples_prior$summary(c("I_t_predicted")) |>
     tidyr::separate(variable,"\\[|\\]",into=c("variable","time","null"))
-  post_1 = fit1$samples_posterior$summary(c("I_t_predicted")) %>%
+  post_1 = fit1$samples_posterior$summary(c("I_t_predicted")) |>
     tidyr::separate(variable,"\\[|\\]",into=c("variable","time","null"))
   pred_1$date = data$date
   post_1$date = data$date
 
-  pred_2 = fit2$samples_prior$summary(c("I_t_predicted")) %>%
+  pred_2 = fit2$samples_prior$summary(c("I_t_predicted")) |>
     tidyr::separate(variable,"\\[|\\]",into=c("variable","time","null"))
-  post_2 = fit2$samples_posterior$summary(c("I_t_predicted")) %>%
+  post_2 = fit2$samples_posterior$summary(c("I_t_predicted")) |>
     tidyr::separate(variable,"\\[|\\]",into=c("variable","time","null"))
   pred_2$date = data$date
   post_2$date = data$date
 
-  pred_3 = fit3$samples_prior$summary(c("I_t_predicted")) %>%
+  pred_3 = fit3$samples_prior$summary(c("I_t_predicted")) |>
     tidyr::separate(variable,"\\[|\\]",into=c("variable","time","null"))
-  post_3 = fit3$samples_posterior$summary(c("I_t_predicted")) %>%
+  post_3 = fit3$samples_posterior$summary(c("I_t_predicted")) |>
     tidyr::separate(variable,"\\[|\\]",into=c("variable","time","null"))
   pred_3$date = data$date
   post_3$date = data$date
@@ -186,11 +186,11 @@ plot_comparesim = function(fit1, fit2, fit3 , data) {
     ggplot2::theme(legend.position = "bottom",text=ggplot2::element_text(size=16))
 
   # plot the fit of the probability of transmission over time
-  prob_p = fit1$samples_posterior$summary(c("prob_infection")) %>%
+  prob_p = fit1$samples_posterior$summary(c("prob_infection")) |>
     tidyr::separate(variable,"\\[|\\]",into=c("variable","time","null"))
-  prob_qp = fit2$samples_posterior$summary(c("prob_infection")) %>%
+  prob_qp = fit2$samples_posterior$summary(c("prob_infection")) |>
     tidyr::separate(variable,"\\[|\\]",into=c("variable","time","null"))
-  prob_nb = fit3$samples_posterior$summary(c("prob_infection")) %>%
+  prob_nb = fit3$samples_posterior$summary(c("prob_infection")) |>
     tidyr::separate(variable,"\\[|\\]",into=c("variable","time","null"))
 
   prob_plot <- ggplot2::ggplot() +
@@ -244,21 +244,21 @@ plot_fitsim_strat = function(fit, sim_data, params=params, transmission_prob_sim
 
   # posterior predictive check
   dat_ = data.frame(variable = "I_t_simulated", time = 1:dim(sim_data)[1], null = "", median = sim_data )
-  post_ = fit$samples_posterior$summary(c("I_t_predicted")) %>%
-    tidyr::separate(variable,"\\[|\\]",into=c("variable","step", "NULL")) %>%
+  post_ = fit$samples_posterior$summary(c("I_t_predicted")) |>
+    tidyr::separate(variable,"\\[|\\]",into=c("variable","step", "NULL")) |>
     tidyr::separate(step,",",into=c("age_group","time"))
-  prior_ = fit$samples_prior$summary(c("I_t_predicted")) %>%
-    tidyr::separate(variable,"\\[|\\]",into=c("variable","step", "NULL")) %>%
+  prior_ = fit$samples_prior$summary(c("I_t_predicted")) |>
+    tidyr::separate(variable,"\\[|\\]",into=c("variable","step", "NULL")) |>
     tidyr::separate(step,",",into=c("age_group","time"))
 
   g1 = ggplot() +
-    #geom_ribbon(data=post_ %>% filter(age_group==2), aes(x=as.numeric(time),ymin=q5,ymax=q95,fill="Prior predictive check"),alpha=.3) +
-    geom_ribbon(data=post_ %>% filter(age_group==1), aes(x=as.numeric(time),ymin=q5,ymax=q95,fill="Age group 1"),alpha=.3) +
-    geom_line(data=post_ %>% filter(age_group==1),aes(x=as.numeric(time),y=median,colour="Age group 1")) +
-    geom_ribbon(data=post_ %>% filter(age_group==2), aes(x=as.numeric(time),ymin=q5,ymax=q95,fill="Age group 2"),alpha=.3) +
-    geom_line(data=post_ %>% filter(age_group==2),aes(x=as.numeric(time),y=median,colour="Age group 2")) +
-    geom_ribbon(data=post_ %>% filter(age_group==3), aes(x=as.numeric(time),ymin=q5,ymax=q95,fill="Age group 3"),alpha=.3) +
-    geom_line(data=post_ %>% filter(age_group==3),aes(x=as.numeric(time),y=median,colour="Age group 3")) +
+    #geom_ribbon(data=post_ |>  filter(age_group==2), aes(x=as.numeric(time),ymin=q5,ymax=q95,fill="Prior predictive check"),alpha=.3) +
+    geom_ribbon(data=post_ |>  filter(age_group==1), aes(x=as.numeric(time),ymin=q5,ymax=q95,fill="Age group 1"),alpha=.3) +
+    geom_line(data=post_ |>  filter(age_group==1),aes(x=as.numeric(time),y=median,colour="Age group 1")) +
+    geom_ribbon(data=post_ |>  filter(age_group==2), aes(x=as.numeric(time),ymin=q5,ymax=q95,fill="Age group 2"),alpha=.3) +
+    geom_line(data=post_ |>  filter(age_group==2),aes(x=as.numeric(time),y=median,colour="Age group 2")) +
+    geom_ribbon(data=post_ |>  filter(age_group==3), aes(x=as.numeric(time),ymin=q5,ymax=q95,fill="Age group 3"),alpha=.3) +
+    geom_line(data=post_ |>  filter(age_group==3),aes(x=as.numeric(time),y=median,colour="Age group 3")) +
     geom_point(data=dat_ ,aes(x=as.numeric(time),y=median.1, colour="Age group 1")) +
     geom_point(data=dat_ ,aes(x=as.numeric(time),y=median.2, colour="Age group 2")) +
     geom_point(data=dat_ ,aes(x=as.numeric(time),y=median.3, colour="Age group 3")) +
@@ -277,21 +277,21 @@ plot_fitsim_strat = function(fit, sim_data, params=params, transmission_prob_sim
                  "p_detect2" = params$p_detect2))
   colnames(sim_) <- "median"
 
-  sim_ = as_tibble(sim_) %>%
+  sim_ = as_tibble(sim_) |>
     dplyr::mutate(variable=median,
                   type="Chosen value",
                   median=median,q5=median,q95=median,
                   variable = c("I0", "theta", "p_detect2" ))
 
-  sim_ = sim_ %>% mutate_at( "variable", as.character )
+  sim_ = sim_ |>  mutate_at( "variable", as.character )
 
-  post_2 = fit$samples_posterior$summary(c("I0_raw", "theta", "p_detect2" )) %>%
+  post_2 = fit$samples_posterior$summary(c("I0_raw", "theta", "p_detect2" )) |>
     dplyr::mutate(type="Posterior distribution", median = median, q5 = q5, q95=q95)
 
-  prior_2 = fit$samples_prior$summary(c("I0_raw", "theta", "p_detect2"))  %>%
+  prior_2 = fit$samples_prior$summary(c("I0_raw", "theta", "p_detect2"))  |>
     dplyr::mutate(type="Prior distribution")
 
-  dat_g2 <- dplyr::bind_rows(sim_,post_2,prior_2) %>%
+  dat_g2 <- dplyr::bind_rows(sim_,post_2,prior_2) |>
     dplyr::mutate(type=factor(type,levels=c("Posterior distribution","Chosen value","Prior distribution")),
                   variable=gsub("_raw","",variable))
 
@@ -304,20 +304,20 @@ plot_fitsim_strat = function(fit, sim_data, params=params, transmission_prob_sim
     labs(x=NULL,y="Parameter values (median and 90% CrI)")
 
   dat_prob = data.frame(variable = "Transmission_probability", time = 1:dim(sim_data)[1], null = "", median = transmission_prob_sim )
-  post_prob = fit$samples_posterior$summary(c("prob_infection")) %>%
-    tidyr::separate(variable,"\\[|\\]",into=c("variable","step", "NULL")) %>%
+  post_prob = fit$samples_posterior$summary(c("prob_infection")) |>
+    tidyr::separate(variable,"\\[|\\]",into=c("variable","step", "NULL")) |>
     tidyr::separate(step,",",into=c("age_group","time"))
-  prior_prob = fit$samples_prior$summary(c("prob_infection")) %>%
-    tidyr::separate(variable,"\\[|\\]",into=c("variable","step", "NULL")) %>%
+  prior_prob = fit$samples_prior$summary(c("prob_infection")) |>
+    tidyr::separate(variable,"\\[|\\]",into=c("variable","step", "NULL")) |>
     tidyr::separate(step,",",into=c("age_group","time"))
   g1prob = ggplot() +
-    geom_ribbon(data=post_prob %>% filter(age_group==1),aes(x=as.numeric(time), ymin=q5,ymax=q95,fill="Age group 1"),alpha=.3) +
-    geom_ribbon(data=post_prob %>% filter(age_group==2),aes(x=as.numeric(time), ymin=q5,ymax=q95,fill="Age group 2"),alpha=.3) +
-    geom_ribbon(data=post_prob %>% filter(age_group==3),aes(x=as.numeric(time), ymin=q5,ymax=q95,fill="Age group 3"),alpha=.3) +
+    geom_ribbon(data=post_prob |>  filter(age_group==1),aes(x=as.numeric(time), ymin=q5,ymax=q95,fill="Age group 1"),alpha=.3) +
+    geom_ribbon(data=post_prob |>  filter(age_group==2),aes(x=as.numeric(time), ymin=q5,ymax=q95,fill="Age group 2"),alpha=.3) +
+    geom_ribbon(data=post_prob |>  filter(age_group==3),aes(x=as.numeric(time), ymin=q5,ymax=q95,fill="Age group 3"),alpha=.3) +
     #geom_ribbon(data=pred_,aes(x=as.numeric(time),ymin=q5,ymax=q95,fill="Posterior predictive check"),alpha=.3) +
-    geom_line(data=post_prob%>% filter(age_group==1),aes(x=as.numeric(time),y=median,colour="Age group 1")) +
-    geom_line(data=post_prob%>% filter(age_group==2),aes(x=as.numeric(time),y=median,colour="Age group 2")) +
-    geom_line(data=post_prob%>% filter(age_group==3),aes(x=as.numeric(time),y=median,colour="Age group 3")) +
+    geom_line(data=post_prob|>  filter(age_group==1),aes(x=as.numeric(time),y=median,colour="Age group 1")) +
+    geom_line(data=post_prob|>  filter(age_group==2),aes(x=as.numeric(time),y=median,colour="Age group 2")) +
+    geom_line(data=post_prob|>  filter(age_group==3),aes(x=as.numeric(time),y=median,colour="Age group 3")) +
     geom_line(data=dat_prob,aes(x=as.numeric(time),y=median.1,colour="Age group 1"), linetype = "dashed") +
     geom_line(data=dat_prob,aes(x=as.numeric(time),y=median.2,colour="Age group 2"), linetype = "dashed") +
     geom_line(data=dat_prob,aes(x=as.numeric(time),y=median.3,colour="Age group 3"), linetype = "dashed") +
@@ -359,11 +359,11 @@ plot_fitsim_strat_realdata = function(fit, data, cum_inc, seroprev) {
 
   # posterior predictive check
   dat_ = data.frame(variable = "I_t_simulated", time = 1:dim(data)[1], null = "", median = data )
-  post_ = fit$samples_posterior$summary(c("I_t_predicted")) %>%
-    tidyr::separate(variable,"\\[|\\]",into=c("variable","step", "NULL")) %>%
+  post_ = fit$samples_posterior$summary(c("I_t_predicted")) |>
+    tidyr::separate(variable,"\\[|\\]",into=c("variable","step", "NULL")) |>
     tidyr::separate(step,",",into=c("age_group","time"))
-  prior_ = fit$samples_prior$summary(c("I_t_predicted")) %>%
-    tidyr::separate(variable,"\\[|\\]",into=c("variable","step", "NULL")) %>%
+  prior_ = fit$samples_prior$summary(c("I_t_predicted")) |>
+    tidyr::separate(variable,"\\[|\\]",into=c("variable","step", "NULL")) |>
     tidyr::separate(step,",",into=c("age_group","time"))
 
   post_$date = rep(dat_$median.date, each = 3)
@@ -380,13 +380,13 @@ plot_fitsim_strat_realdata = function(fit, data, cum_inc, seroprev) {
     ggplot2::geom_point(data=dat_ ,aes(x=date,y=median.cases_age1, colour="0-19")) +
     ggplot2::geom_point(data=dat_ ,aes(x=date,y=median.cases_age2, colour="20-59")) +
     ggplot2::geom_point(data=dat_ ,aes(x=date,y=median.cases_age3, colour="60+")) +
-    #geom_ribbon(data=post_ %>% filter(age_group==2), aes(x=as.numeric(time),ymin=q5,ymax=q95,fill="Prior predictive check"),alpha=.3) +
-    ggplot2::geom_ribbon(data=post_ %>% filter(age_group==1), aes(x=date,ymin=q5,ymax=q95,fill="0-19"),alpha=.3) +
-    ggplot2::geom_line(data=post_ %>% filter(age_group==1),aes(x=date,y=median,colour="0-19")) +
-    ggplot2::geom_ribbon(data=post_ %>% filter(age_group==2), aes(x=date,ymin=q5,ymax=q95,fill="20-59"),alpha=.3) +
-    ggplot2::geom_line(data=post_ %>% filter(age_group==2),aes(x=date,y=median,colour="20-59")) +
-    ggplot2::geom_ribbon(data=post_ %>% filter(age_group==3), aes(x=date,ymin=q5,ymax=q95,fill="60+"),alpha=.3) +
-    ggplot2::geom_line(data=post_ %>% filter(age_group==3),aes(x=date,y=median,colour="60+")) +
+    #geom_ribbon(data=post_ |>  filter(age_group==2), aes(x=as.numeric(time),ymin=q5,ymax=q95,fill="Prior predictive check"),alpha=.3) +
+    ggplot2::geom_ribbon(data=post_ |>  filter(age_group==1), aes(x=date,ymin=q5,ymax=q95,fill="0-19"),alpha=.3) +
+    ggplot2::geom_line(data=post_ |>  filter(age_group==1),aes(x=date,y=median,colour="0-19")) +
+    ggplot2::geom_ribbon(data=post_ |>  filter(age_group==2), aes(x=date,ymin=q5,ymax=q95,fill="20-59"),alpha=.3) +
+    ggplot2::geom_line(data=post_ |>  filter(age_group==2),aes(x=date,y=median,colour="20-59")) +
+    ggplot2::geom_ribbon(data=post_ |>  filter(age_group==3), aes(x=date,ymin=q5,ymax=q95,fill="60+"),alpha=.3) +
+    ggplot2::geom_line(data=post_ |>  filter(age_group==3),aes(x=date,y=median,colour="60+")) +
     ggplot2::scale_fill_manual(values=c("0-19"=col_simul,
                                "20-59"="orange",
                                "60+"="red")) +
@@ -398,11 +398,11 @@ plot_fitsim_strat_realdata = function(fit, data, cum_inc, seroprev) {
     ggplot2::theme(legend.position = "bottom", text=ggplot2::element_text(size=16))+
     ggplot2::scale_x_date(date_labels = "%b %Y")
 
-  post_prob = fit$samples_posterior$summary(c("prob_infection")) %>%
-    tidyr::separate(variable,"\\[|\\]",into=c("variable","step", "NULL")) %>%
+  post_prob = fit$samples_posterior$summary(c("prob_infection")) |>
+    tidyr::separate(variable,"\\[|\\]",into=c("variable","step", "NULL")) |>
     tidyr::separate(step,",",into=c("age_group","time"))
-  prior_prob = fit$samples_prior$summary(c("prob_infection")) %>%
-    tidyr::separate(variable,"\\[|\\]",into=c("variable","step", "NULL")) %>%
+  prior_prob = fit$samples_prior$summary(c("prob_infection")) |>
+    tidyr::separate(variable,"\\[|\\]",into=c("variable","step", "NULL")) |>
     tidyr::separate(step,",",into=c("age_group","time"))
 
   post_prob$date = as.Date(rep(dat_$median.date, each = 3))
@@ -413,13 +413,13 @@ plot_fitsim_strat_realdata = function(fit, data, cum_inc, seroprev) {
               alpha = I(.5), fill = I("lightblue"))  +
     ggplot2::geom_rect(aes(xmin = as.Date("2020-10-18"), xmax = as.Date("2020-12-31"), ymin = -Inf, ymax = Inf),
               alpha = I(.5), fill = I("lightblue")) +
-    ggplot2::geom_ribbon(data=post_prob %>% filter(age_group==1),aes(x=date, ymin=q5,ymax=q95,fill="0-19"),alpha=.3) +
-    ggplot2::geom_ribbon(data=post_prob %>% filter(age_group==2),aes(x=date, ymin=q5,ymax=q95,fill="20-59"),alpha=.3) +
-    ggplot2::geom_ribbon(data=post_prob %>% filter(age_group==3),aes(x=date, ymin=q5,ymax=q95,fill="60+"),alpha=.3) +
+    ggplot2::geom_ribbon(data=post_prob |>  filter(age_group==1),aes(x=date, ymin=q5,ymax=q95,fill="0-19"),alpha=.3) +
+    ggplot2::geom_ribbon(data=post_prob |>  filter(age_group==2),aes(x=date, ymin=q5,ymax=q95,fill="20-59"),alpha=.3) +
+    ggplot2::geom_ribbon(data=post_prob |>  filter(age_group==3),aes(x=date, ymin=q5,ymax=q95,fill="60+"),alpha=.3) +
     #geom_ribbon(data=pred_,aes(x=as.numeric(time),ymin=q5,ymax=q95,fill="Posterior predictive check"),alpha=.3) +
-    ggplot2::geom_line(data=post_prob%>% filter(age_group==1),aes(x=date,y=median,colour="0-19")) +
-    ggplot2::geom_line(data=post_prob%>% filter(age_group==2),aes(x=date,y=median,colour="20-59")) +
-    ggplot2::geom_line(data=post_prob%>% filter(age_group==3),aes(x=date,y=median,colour="60+")) +
+    ggplot2::geom_line(data=post_prob|>  filter(age_group==1),aes(x=date,y=median,colour="0-19")) +
+    ggplot2::geom_line(data=post_prob|>  filter(age_group==2),aes(x=date,y=median,colour="20-59")) +
+    ggplot2::geom_line(data=post_prob|>  filter(age_group==3),aes(x=date,y=median,colour="60+")) +
     ggplot2::scale_fill_manual(values=c("0-19"=col_simul,
                                "20-59"="orange",
                                "60+"="red")) +
@@ -430,13 +430,13 @@ plot_fitsim_strat_realdata = function(fit, data, cum_inc, seroprev) {
     ggplot2::theme(legend.position = "bottom",text=ggplot2::element_text(size=16))+
     ggplot2::scale_x_date(date_labels = "%b %Y")
 
-  post_var = fit$samples_posterior$summary(c("I0_raw", "theta","p_detect1", "p_detect2", "p_detect3" )) %>%
+  post_var = fit$samples_posterior$summary(c("I0_raw", "theta","p_detect1", "p_detect2", "p_detect3" )) |>
     dplyr::mutate(type="Posterior distribution", median = median, q5 = q5, q95=q95)
 
-  prior_var = fit$samples_prior$summary(c("I0_raw", "theta", "p_detect1", "p_detect2", "p_detect3" ))  %>%
+  prior_var = fit$samples_prior$summary(c("I0_raw", "theta", "p_detect1", "p_detect2", "p_detect3" ))  |>
     dplyr::mutate(type="Prior distribution")
 
-  dat_g2 <- dplyr::bind_rows(post_var,prior_var) %>%
+  dat_g2 <- dplyr::bind_rows(post_var,prior_var) |>
     dplyr::mutate(type=factor(type,levels=c("Posterior distribution","Chosen value","Prior distribution")),
                   variable=gsub("_raw","",variable))
 
@@ -450,7 +450,7 @@ plot_fitsim_strat_realdata = function(fit, data, cum_inc, seroprev) {
 
   # Special for Geneva
 
-  post_detect = fit$samples_posterior$summary(c("p_detect1", "p_detect2", "p_detect3" )) %>%
+  post_detect = fit$samples_posterior$summary(c("p_detect1", "p_detect2", "p_detect3" )) |>
     dplyr::mutate(type="Posterior distribution", median = median, q5 = q5, q95=q95)
 
   post_detect$age_group = rep(c("0-19", "20-59", "60+"), 3)
@@ -505,11 +505,11 @@ plot_compare = function(fitBM, fitSpline, fitGP, data, params,transmission_prob_
 
   # posterior predictive check
   dat_ = data.frame(variable = "I_t_simulated", time = 1:length(data), null = "", median = data )
-  pred_BM = fitBM$samples_posterior$summary(c("I_t_predicted")) %>%
+  pred_BM = fitBM$samples_posterior$summary(c("I_t_predicted")) |>
     tidyr::separate(variable,"\\[|\\]",into=c("variable","time","null"))
-  pred_spline = fitSpline$samples_posterior$summary(c("I_t_predicted")) %>%
+  pred_spline = fitSpline$samples_posterior$summary(c("I_t_predicted")) |>
     tidyr::separate(variable,"\\[|\\]",into=c("variable","time","null"))
-  pred_GP = fitGP$samples_posterior$summary(c("I_t_predicted")) %>%
+  pred_GP = fitGP$samples_posterior$summary(c("I_t_predicted")) |>
     tidyr::separate(variable,"\\[|\\]",into=c("variable","time","null"))
   g1 = ggplot2::ggplot() +
     ggplot2::geom_ribbon(data=pred_BM,aes(x=as.numeric(time),ymin=q5,ymax=q95,fill="Posterior -- BM model"),alpha=.3) +
@@ -528,11 +528,11 @@ plot_compare = function(fitBM, fitSpline, fitGP, data, params,transmission_prob_
     ggplot2::theme(legend.position = "bottom", text=ggplot2::element_text(size=16))
 
   dat_prob = data.frame(variable = "Transmission_probability", time = 1:length(data), null = "", median = transmission_prob_sim )
-  pred_BM_prob = fitBM$samples_posterior$summary(c("prob_infection")) %>%
+  pred_BM_prob = fitBM$samples_posterior$summary(c("prob_infection")) |>
     tidyr::separate(variable,"\\[|\\]",into=c("variable","time","null"))
-  pred_spline_prob = fitSpline$samples_posterior$summary(c("prob_infection")) %>%
+  pred_spline_prob = fitSpline$samples_posterior$summary(c("prob_infection")) |>
     tidyr::separate(variable,"\\[|\\]",into=c("variable","time","null"))
-  pred_GP_prob = fitGP$samples_posterior$summary(c("prob_infection")) %>%
+  pred_GP_prob = fitGP$samples_posterior$summary(c("prob_infection")) |>
     tidyr::separate(variable,"\\[|\\]",into=c("variable","time","null"))
   g2 = ggplot2::ggplot() +
     ggplot2::geom_ribbon(data=pred_BM_prob,aes(x=as.numeric(time),ymin=q5,ymax=q95,fill="Posterior -- BM model"),alpha=.3) +
