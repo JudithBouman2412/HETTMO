@@ -253,9 +253,10 @@ sampling_model <- function( data_list,
     atol = rtol;
     max_num_steps = max_num_steps})
 
-  # Load poisson spline model
-  model_compiled = cmdstanr::cmdstan_model(stan_file = paste("src/stan/", model, sep =""),
-                                        include_paths = "src/stan",
+  # Load stan model with cmdstanr
+  stan_file <- system.file( model, package = "HETTMO")
+  model_compiled = cmdstanr::cmdstan_model(stan_file = stan_file ,
+                                        include_paths = "inst",
                                         force_recompile = TRUE)
 
   # prior predictive check
