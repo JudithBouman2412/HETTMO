@@ -14,6 +14,7 @@ data {
   // load basic data objects that are needed independent of the exact specifications of the model
   // data objects that are generic independent of the model specifications
   int num_t;
+  int num_serosurvey;
   array[num_t] real ts;
   int popsize;
 
@@ -24,11 +25,6 @@ data {
 
   // fixed quantities
   real generation_time;
-
-  real beta_fixed;
-  real sens;
-  real spec;
-  real p_detect1;
   real fraction_pre;
 
   // control parameters
@@ -43,12 +39,14 @@ data {
 
   // use pre-defined input data to fit the model
   array[num_t] int data_pre;
-  int t_survey_start;
-  int t_survey_end;
-  int n_infected_survey;
-  int n_tested_survey;
+  array[num_serosurvey] int t_survey_start;
+  array[num_serosurvey] int t_survey_end;
+  array[num_serosurvey] int n_infected_survey;
+  array[num_serosurvey] int n_tested_survey;
 
-  int t_detectionSwitch;
+  real beta_fixed;
+  array[num_serosurvey] real sens;
+  array[num_serosurvey] real spec;
 
   // load data objects for the type of stratification choosen
   real contact;
@@ -79,22 +77,19 @@ transformed data {
   // compute basis functions for f1
   matrix[num_t, M_f1] PHI_f1 = PHI_EQ(num_t, M_f1, L_f1, ts_norm); // use transformed ts data instead of the real ts
 
-  array[6] int DIM = {num_comp, num_t, num_prev, M_f1, popsize, 20}; // Do we need any information here?
+  array[7] int DIM = {num_comp, num_t, num_prev, M_f1, popsize, 20, num_serosurvey}; // Do we need any information here?
 
 }
 
 parameters {
   // generic parameters
-  real<lower=0> R0;
+  real<lower=0> R0;           // transmission probability per contact
   real<lower=0> I0_raw;                 // initial seed (in number of individuals)
-  //real<lower=0.4, upper=0.6> fraction_pre; // fraction of the generation time spend in compartment E
-  //real<lower=0, upper=1> p_detect1; // ascertainmentrate first wave
-  real<lower=0, upper=1> p_detect2; // ascertainmentrate second wave
+  vector<lower=0, upper=1>[num_serosurvey] pi_;
 
   // paremeters dependent on type of time dependence
   vector[M_f1] beta_f1;         // basis function coefficients for f1
   real<lower=0> lambda_f1;      // lengthscale of f1
-  //real<lower=0> alpha_f1;       // scale of f1
 
   //for quasi poisson model
   real<lower=1.5> theta;
@@ -111,7 +106,7 @@ transformed parameters {
   // prepare GP based on sampled variables
   vector[M_f1] diagSPD_f1 = diagSPD_EQ(alpha_f1, lambda_f1, L_f1, M_f1);
 
-  row_vector[num_t] incidence;
+  vector[num_t] asc_incidence;
 
   array[num_t] vector[num_comp] y;
 
@@ -127,7 +122,7 @@ transformed parameters {
       ts, DIM, M_f1               // metadata
       );
     // calculate incidence of the infection
-    incidence = get_incidence(y, DIM, popsize, atol, I0, p_detect1, p_detect2, t_detectionSwitch);
+    asc_incidence = get_incidence(y, DIM, popsize, atol, I0, pi_, t_survey_start, t_survey_end);
   } else if (sampler == 1 ){
     y = ode_adams_tol( seir_0d_GP,
       rep_vector(0.0,num_comp),         // initial values = 0 (handled within the ODE)
@@ -139,7 +134,7 @@ transformed parameters {
       ts, DIM,  M_f1                                // metadata
       );
     // calculate incidence of the infection
-    incidence = get_incidence(y, DIM, popsize, atol, I0, p_detect1, p_detect2, t_detectionSwitch);
+    asc_incidence = get_incidence(y, DIM, popsize, atol, I0, pi_, t_survey_start, t_survey_end);
   } else if (sampler == 2){
     y = ode_bdf_tol( seir_0d_GP,
       rep_vector(0.0,num_comp),         // initial values = 0 (handled within the ODE)
@@ -151,7 +146,7 @@ transformed parameters {
       ts, DIM, M_f1                                // metadata
       );
     // calculate incidence of the infection
-    incidence = get_incidence(y, DIM, popsize, atol, I0, p_detect1, p_detect2, t_detectionSwitch);
+    asc_incidence = get_incidence(y, DIM, popsize, atol, I0, pi_, t_survey_start, t_survey_end);
   } else if (sampler == 3){
     y = ode_ckrk_tol( seir_0d_GP,
       rep_vector(0.0,num_comp),         // initial values = 0 (handled within the ODE)
@@ -163,7 +158,7 @@ transformed parameters {
       ts, DIM, M_f1                            // metadata
       );
     // calculate incidence of the infection
-    incidence = get_incidence(y, DIM, popsize, atol, I0, p_detect1, p_detect2, t_detectionSwitch);
+    asc_incidence = get_incidence(y, DIM, popsize, atol, I0, pi_, t_survey_start, t_survey_end);
   } else if (sampler == 4){
     y = solve_ode_system_trapezoidal(   rep_vector(0.0,num_comp),
                                         ts,
@@ -172,34 +167,35 @@ transformed parameters {
                                         tau, gamma, contact, beta_fixed,
                                         DIM  );
     // calculate prevalence of the infection
-    incidence = get_incidence(y, DIM, popsize, atol, I0, p_detect1, p_detect2, t_detectionSwitch);
+    asc_incidence = get_incidence(y, DIM, popsize, atol, I0, pi_, t_survey_start, t_survey_end);
   }
 
-  real p_infected_survey = mean(to_vector(y[t_survey_start:t_survey_end, 4])) / popsize;
-
+  // given the SEIR dynamics, calculate the probability to observe a seropositive individual in the population
+  array[num_serosurvey] real cum_inf_frac;
+  for (q in 1:num_serosurvey){
+    cum_inf_frac[q] = mean(to_vector(y[t_survey_start[q]:t_survey_end[q], 4])) / popsize;
+  }
 }
 
 model {
   // Priors
   // SEIR parameters
   R0 ~ gamma(p_R0[1],p_R0[2]);
-  //R0 ~ uniform(0.3,0.7);
   I0_raw ~ gamma(p_I0[1]^2/p_I0[2]^2,p_I0[1]/p_I0[2]^2);
-  //fraction_pre ~ uniform(0.4, 0.6);
-  //p_detect1 ~ normal(0.1,0.1);
-  p_detect2 ~ beta(2,2);
+  pi_ ~ normal(0.5,0.1);
 
   // GP parameters
   beta_f1 ~ normal(0, 1);
-  lambda_f1 ~ exponential(5); // scale the data?
-  //alpha_f1 ~ exponential(1);
+  lambda_f1 ~ exponential(5);
 
   theta ~ normal( p_theta[1], p_theta[2]);
 
   // likelihood
   if (inference==1) {
-    n_infected_survey ~ binomial(n_tested_survey, p_infected_survey*sens + (1-p_infected_survey)*(1-spec)); // do I need to combine this in the target += statement directly?
-    target += neg_binomial_2_log_lpmf( data_pre | log(incidence), to_array_1d( to_row_vector(incidence)/(theta-1)) );
+    for (i in 1:num_serosurvey){
+      n_infected_survey[i] ~ binomial(n_tested_survey[i], cum_inf_frac[i]*sens[i] + (1-cum_inf_frac[i])*(1-spec[i]));
+    }
+    target += neg_binomial_2_log_lpmf( data_pre | log(asc_incidence), to_array_1d( to_row_vector(asc_incidence)/(theta-1)) );
   }
 }
 
@@ -211,25 +207,23 @@ generated quantities {
   //  quasi poisson
   if (inference==1) {
     for (t in 1:num_t)
-        log_lik[t] = neg_binomial_2_log_lpmf( data_pre[t] | log(incidence)[t], incidence[t]/(theta-1));
-        array[num_t] int I_t_simulated = data_pre;
+        log_lik[t] = neg_binomial_2_log_lpmf( data_pre[t] | log(asc_incidence)[t], asc_incidence[t]/(theta-1));
+        array[num_t] int confirmed_cases_simulated = data_pre;
   }
 
-  real log_sero = binomial_lpmf(n_infected_survey | n_tested_survey, p_infected_survey*sens + (1-p_infected_survey)*(1-spec));
-
-  array[num_t] int I_t_predicted = qpoisson_rng(num_t, incidence, theta);
+  array[num_t] int confirmed_cases_predicted = qpoisson_rng(num_t, asc_incidence, theta);
 
   // calculate probability of infection
-  array[num_t] real prob_infection;
+  array[num_t] real rho;
   // vector[M_f1] diagSPD_f1_sim = diagSPD_EQ(alpha_f1, lambda_f1, L_f1, M_f1);
   for (i in 1:num_t){
-    prob_infection[i] = ((beta) + inv_logit(to_row_vector(ana_phi(PHI_f1, M_f1, i, num_t, ts)) * (diagSPD_f1 .* beta_f1))) ;
+    rho[i] = ((beta) + inv_logit(to_row_vector(ana_phi(PHI_f1, M_f1, i, num_t, ts)) * (diagSPD_f1 .* beta_f1))) ;
   }
 
     // calculate effective reproduction number
   vector[num_t] R_eff;
   for (i in 1:num_t){
-    R_eff[i] = (y[i,1]/popsize) * prob_infection[i] * beta_fixed * (contact/gamma);
+    R_eff[i] = (y[i,1]/popsize) * rho[i] * beta_fixed * (contact/gamma);
   }
 
 

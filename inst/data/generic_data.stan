@@ -1,5 +1,6 @@
 // data objects that are generic independent of the model specifications
 int num_t;
+int num_serosurvey;
 array[num_t] real ts;
 int popsize;
 

@@ -1,3 +1,25 @@
+vector rep_each( vector x, array[] int K){
+
+    // repeat each element of x as many times as defined in K
+    // x and K should have the same size
+    int N = K[size(K)];
+    vector[N] y;
+    int pos = 1;
+    int initial = 0;
+
+    for (n in 1:size(x)) {
+      int num_repeats = K[n] - initial;
+      initial = K[n];
+
+      for (k in 1:num_repeats) {
+        y[pos] = x[n];
+        pos += 1;
+      }
+
+    }
+    return y;
+}
+
 array[] int seq(int from, int to){
   int s = to - from + 1;
   array[s] int v;
@@ -28,7 +50,7 @@ array[] int mind(array[] int comp, array[] int age_sex, int num_class){
 }
 
 // quasi poisson, random number generator
-array[] int qpoisson_rng(int n, row_vector mu, real theta  ){
+array[] int qpoisson_rng(int n, vector mu, real theta  ){
   array[n] int out = neg_binomial_2_rng( mu, to_array_1d( mu/(theta-1) ) );
   return(out);
 }

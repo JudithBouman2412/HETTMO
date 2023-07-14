@@ -52,24 +52,23 @@ standata <- function( data,
 
   if (simulated){
     # parameters specific for simulated data
-    fixed_pars$sens = 1
-    fixed_pars$spec = 1
-    fixed_pars$t_dectionSwitch = 25
+    fixed_pars$sens = c(1,1)
+    fixed_pars$spec = c(1,1)
     fixed_pars$ts = 1:45
     fixed_pars$num_t = 45
     fixed_pars$beta_fixed = 0.0638
-    fixed_pars$t_survey_start = 45 #begin_week
-    fixed_pars$t_survey_end = 45 #end_week
-    fixed_pars$t_detectionSwitch = 15
+    fixed_pars$t_survey_start = c(25, 45) #begin_week
+    fixed_pars$t_survey_end = c(25, 45) #end_week
+    fixed_pars$num_serosurvey = 2
 
     if (homogeneous){
       # homogeneous specific parameters
       fixed_pars$contact = 77
-      fixed_pars$n_tested_survey = 0.05 * 100000
-      fixed_pars$n_infected_survey = sum(seroprev_dat$num_pos_tests)
+      fixed_pars$n_tested_survey = c(5000, 5000)
+      fixed_pars$n_infected_survey = c(sum(seroprev_dat[[1]]$num_pos_tests),
+                                       sum(seroprev_dat[[2]]$num_pos_tests))
       fixed_pars$popsize = 100000
       fixed_pars$data_pre=data
-      fixed_pars$p_detect1=0.1
     } else {
       # heterogeneous specific parameters
       contact_matrix <- create_contactmatrix_GE(additional_data)
@@ -79,7 +78,6 @@ standata <- function( data,
       fixed_pars$n_tested_survey = c(1000,2000,2000) # 5 percent of total population was tested
       fixed_pars$n_infected_survey = seroprev_dat
       fixed_pars$beta_fixed = 0.052
-      fixed_pars$p_detect1=0.3
       fixed_pars$num_class = 3
       fixed_pars$num_age = 3
       fixed_pars$num_sex = 1
@@ -88,46 +86,46 @@ standata <- function( data,
 
   } else {
     # Parameters for COVID-19 data from Canton of Geneva
-    fixed_pars$sens = 0.997
-    fixed_pars$spec = 0.966
+    fixed_pars$sens = c(0.93, 0.997,0.997)
+    fixed_pars$spec = c(1.0, 0.966,0.966)
     fixed_pars$ts = 1:44
     fixed_pars$num_t = 44
     fixed_pars$beta_fixed = 0.1
+    fixed_pars$num_serosurvey = 3
 
     if (homogeneous){
       # homogeneous specific parameters
       fixed_pars$contact = 50
-      fixed_pars$n_tested_survey = sum(seroprev_dat$num_tested)
-      fixed_pars$n_infected_survey = sum(seroprev_dat$num_pos_tests)
+      fixed_pars$n_tested_survey = c(sum(seroprev_dat[[1]]$num_tested),
+                                     sum(seroprev_dat[[1]]$num_tested),
+                                     sum(seroprev_dat[[1]]$num_tested))
+      fixed_pars$n_infected_survey = c(sum(seroprev_dat[[1]]$num_pos_tests),
+                                       sum(seroprev_dat[[1]]$num_pos_tests),
+                                       sum(seroprev_dat[[1]]$num_pos_tests))
       fixed_pars$popsize = 499480
       fixed_pars$data_pre=data
-      fixed_pars$p_detect1=0.1
-      fixed_pars$t_survey_start = 39 #begin_week
-      fixed_pars$t_survey_end = 44 #end_week
-      fixed_pars$t_detectionSwitch = 15
+      fixed_pars$t_survey_start = c(6, 14, 39) #begin_week
+      fixed_pars$t_survey_end = c(10, 17, 44) #end_week
     } else {
       contact_matrix <- create_contactmatrix_GE(additional_data$contact_all)
       # heterogeneous specific parameters
       fixed_pars$data_pre=t(data)
       fixed_pars$popdist=additional_data$pop_GE
       fixed_pars$contact=contact_matrix[[1]]
-      fixed_pars$t_detectionSwitch = c(10,17)
-      fixed_pars$n_tested_survey_1 = additional_data$sero_1[[1]]$num_tested
-      fixed_pars$n_infected_survey_1 = additional_data$sero_1[[1]]$num_pos_tests
-      fixed_pars$t_survey_start_1 = 6
-      fixed_pars$t_survey_end_1 = 10
-      fixed_pars$n_tested_survey_2 = c(0,additional_data$sero_2[[1]]$num_tested)
-      fixed_pars$n_infected_survey_2 = c(0,additional_data$sero_2[[1]]$num_pos_tests)
-      fixed_pars$t_survey_start_2 = 14
-      fixed_pars$t_survey_end_2 = 17
-      fixed_pars$n_tested_survey_3 = c(0,additional_data$sero_3[[1]]$num_tested)
-      fixed_pars$n_infected_survey_3 = c(0,additional_data$sero_3[[1]]$num_pos_tests)
-      fixed_pars$t_survey_start_3 = 39
-      fixed_pars$t_survey_end_3 = 44
+      fixed_pars$t_survey_start = c(6, 14, 39) #begin_week
+      fixed_pars$t_survey_end = c(10, 17, 44) #end_week
+
+      fixed_pars$n_infected_survey = cbind(dditional_data$sero_1[[1]]$num_pos_tests,
+                                           c(0,dditional_data$sero_1[[2]]$num_pos_tests),
+                                           c(0,dditional_data$sero_1[[3]]$num_pos_tests))
+      fixed_pars$n_tested_survey = cbind(additional_data$sero_1[[1]]$num_tested,
+                                         additional_data$sero_1[[2]]$num_tested,
+                                         additional_data$sero_1[[3]]$num_tested)
+
       fixed_pars$num_class = 3
       fixed_pars$num_age = 3
       fixed_pars$num_sex = 1
-      fixed_pars$p_beta = c(0.1,0.1)
+      fixed_pars$p_beta = c(0.1, 0.1)
     }
   }
 
@@ -178,32 +176,33 @@ create_function_initial_values <- function(data_list,
     # General parameters
     initial_value_list$R0=stats::rgamma(1,data_list$p_R0[1],data_list$p_R0[2])
     initial_value_list$I0_raw=stats::rgamma(1,data_list$p_I0[1])
-    initial_value_list$p_detect2 = truncnorm::rtruncnorm(1,a=0, b=1, 0.5, 0.1)
+    initial_value_list$pi_ = truncnorm::rtruncnorm(data_list$num_serosurvey,a=0, b=1, 0.5, 0.1)
 
     # parameters based on method of time-dependence
     if (type=="spline"){
-      initial_value_list$a_raw=truncnorm::rtruncnorm(data_list$num_knots+1, a = 0, b = Inf,
+      initial_value_list$alpha_init=truncnorm::rtruncnorm(data_list$num_knots+1, a = 0, b = Inf,
                                           ( data_list$p_R0[1]*(1/(data_list$generation_time*(0.5)))/data_list$contact )/data_list$beta_fixed, 1)
     } else if (type=="GP"){
-
+      initial_value_list$beta_f1 = rnorm(data_list$M_f1)
+      initial_value_list$lambda_f1 = rexp(1,5)
     } else if (type=="BM"){
       initial_value_list$sigmaBM=truncnorm::rtruncnorm(1, 0, a=0, b=Inf, data_list$p_sigma_BM)
-      initial_value_list$eta_noise=stats::rnorm(data_list$num_t,0,1)
+      initial_value_list$eta_noise=stats::rnorm(data_list$num_t-1,0,1)
     }
   } else {
     initial_value_list$beta=rep(truncnorm::rtruncnorm(1,0,1,data_list$p_beta[1], data_list$p_beta[2]),3)
     initial_value_list$I0_raw=rep(stats::rgamma(1,data_list$p_I0[1]),3)
-    initial_value_list$a_raw=rbind(truncnorm::rtruncnorm(data_list$num_knots+2, a=0, b = Inf, ( data_list$p_beta[1]), 0.1) ,
+    initial_value_list$alpha=rbind(truncnorm::rtruncnorm(data_list$num_knots+2, a=0, b = Inf, ( data_list$p_beta[1]), 0.1) ,
                                    truncnorm::rtruncnorm(data_list$num_knots+2, a=0, b = Inf, ( data_list$p_beta[1]), 0.1) ,
                                    truncnorm::rtruncnorm(data_list$num_knots+2, a=0, b = Inf, ( data_list$p_beta[1]), 0.1) )
-    initial_value_list$p_detect2 = truncnorm::rtruncnorm(3, a=0, b=1, 0.5, 0.1)
+    initial_value_list$pi_ = truncnorm::rtruncnorm(data_list$num_serosurvey, a=0, b=1, 0.5, 0.1)
   }
 
   # parameters specific for sampling distribution
   if (sampling=="qp"){
     initial_value_list$theta=truncnorm::rtruncnorm(1, a = 1.5, b=Inf, data_list$p_theta[1], data_list$p_theta[2])
   } else if ( sampling =="negbin"){
-
+    initial_value_list$phi_inv = rexp(1, data_list$p_phi)
   }
 
   return(initial_value_list)

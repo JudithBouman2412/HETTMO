@@ -15,6 +15,7 @@ data {
   // data objects that are generic independent of the model specifications
   int num_t;
   int num_class;
+  int num_serosurvey;
   array[num_t] real ts;
 
   // priors
@@ -24,12 +25,15 @@ data {
 
   // fixed quantities
   real generation_time;
-  real beta_fixed;
-  real sens;
-  real spec;
-  int t_detectionSwitch;
   real fraction_pre;
-  real p_detect1;
+  array[num_serosurvey] int t_survey_start;
+  array[num_serosurvey] int t_survey_end;
+  array[num_class, num_serosurvey] int n_infected_survey;
+  array[num_class, num_serosurvey] int n_tested_survey;
+
+  real beta_fixed;
+  array[num_serosurvey] real sens;
+  array[num_serosurvey] real spec;
 
   // control parameters
   real rtol;
@@ -45,12 +49,6 @@ data {
   // use pre-defined input data to fit the model
   array[num_class, num_t] int data_pre;
 
-  // First serosurvey
-  int t_survey_start;
-  int t_survey_end;
-  array[num_class] int n_infected_survey;
-  array[num_class] int n_tested_survey;
-
    // load data element that defines what sampler should be used
   int sampler;
 
@@ -63,20 +61,17 @@ transformed data {
   // specific parameters for stratified version
   int num_eq = num_comp*num_class;
 
-  array[7] int DIM = {num_comp, num_t, num_prev, num_age, num_sex, num_class, num_eq};
+  array[8] int DIM = {num_comp, num_t, num_prev, num_age, num_sex, num_class, num_eq, num_serosurvey};
 
 }
 
 parameters {
   // generic parameters
-  //array[num_class] real<lower=0, upper=1> beta;               // transmission probability per contact
   real<lower=0> I0_raw;                 // initial seed (in number of individuals)
 
   // paremeters dependent on type of time dependence
-  array[num_class, num_basis] real<lower=0> a_raw;              // coefficients for spline
-  //real<lower=0.4, upper=0.6> fraction_pre; // fraction of the generation time spend in compartment E
-  // real<lower=0, upper=1> p_detect1; // ascertainmentrate first wave
-  real<lower=0, upper=1> p_detect2; // ascertainmentrate second wave
+  array[num_class, num_basis] real<lower=0> alpha;              // coefficients for spline
+  vector<lower=0, upper=1>[num_serosurvey] pi_;
 
   //for quasi poisson model
   real<lower=1.5> theta;
@@ -91,15 +86,7 @@ transformed parameters {
   real I0 = (1+I0_raw);
 
   // generic steps
-  array[num_class, num_t] real incidence;
-
-  array[num_class, num_basis] real a = a_raw;
-
-  //for (q in 1:num_class){
-  //  a[q,1] = (beta[q])/beta_fixed; // can also be negative, as we use inv.logit insdide ODE
-  //  for (i in 2:num_basis)
-  //    a[q,i] =  a_raw[q, i-1];      // a[i-1] + a_raw[i-1]*kappa;
-  //}
+  array[num_class, num_t] real asc_incidence;
 
   array[num_t] vector[num_eq] y;
 
@@ -108,18 +95,20 @@ transformed parameters {
       t0,                               // initial time = 0
       ts,                               // evaluation times
       rtol, atol, max_num_steps,        // tolerances
-      I0, knots, a, b_hat, order,  // parameters
+      I0, knots, alpha, b_hat, order,  // parameters
       tau, gamma, contact, beta_fixed, popdist,     // data
       DIM                               // metadata
       );
 
   // extract, rescale and format prevalence, simulate data
-  incidence = get_incidence(y, DIM, p_detect1, p_detect2, t_detectionSwitch );
+  asc_incidence = get_incidence(y, DIM, pi_, t_survey_start, t_survey_end);
 
-  array[num_class] real p_infected_survey;
-
+  // given the SEIR dynamics, calculate the probability to observe a seropositive individual in the population
+  array[num_class, num_serosurvey] real cum_inf_frac;
   for (i in 1:num_class){
-    p_infected_survey[i] = mean(to_vector(y[t_survey_start:t_survey_end, ind(4,i, num_class) ])) / popdist[i];
+    for (q in 1:num_serosurvey){
+      cum_inf_frac[i, q] = mean(to_vector(y[t_survey_start[q]:t_survey_end[q], ind(4,i, num_class) ])) / popdist[i];
+    }
   }
 
 }
@@ -130,19 +119,21 @@ model {
   //beta ~ normal(p_beta[1],p_beta[2]);
 
   for (i in 1:num_class){
-    a_raw[i][] ~ normal( (p_beta[1]), 0.1 ); // better informative prior --> update to more stable method for overfitting see ref. manual
+    alpha[i][] ~ normal( (p_beta[1]), 0.1 ); // better informative prior --> update to more stable method for overfitting see ref. manual
   }
 
   theta ~ normal( p_theta[1], p_theta[2]);
   //fraction_pre ~ uniform(0.4, 0.6);
-  p_detect2 ~ uniform(0.1,0.9);
+  pi_ ~ uniform(0.1,0.9);
 
   // likelihood
   if(inference==1){
     for (j in 1:num_class){
-      n_infected_survey[j] ~ binomial(n_tested_survey[j], p_infected_survey[j]*sens + (1-p_infected_survey[j])*(1-spec));
+      for (i in 1:num_serosurvey){
+        n_infected_survey[j,i] ~ binomial(n_tested_survey[j, i], cum_inf_frac[j,i]*sens[i] + (1-cum_inf_frac[j,i])*(1-spec[i]));
+      }
       for (i in 1:num_t){
-        target += neg_binomial_2_log_lpmf( data_pre[j,i] | log(incidence[j,i]), incidence[j,i]/(theta-1) );
+        target += neg_binomial_2_log_lpmf( data_pre[j,i] | log(asc_incidence[j,i]), asc_incidence[j,i]/(theta-1) );
       }
     }
   }
@@ -151,17 +142,17 @@ model {
 
 generated quantities {
 
-  array[num_class] vector[num_t] I_t_predicted;
+  array[num_class] vector[num_t] confirmed_cases_predicted;
 
   for (i in 1:num_class){
-    I_t_predicted[i][] = to_vector(qpoisson_rng(num_t, to_row_vector(incidence[i,]), theta));
+    confirmed_cases_predicted[i][] = to_vector(qpoisson_rng(num_t, to_vector(asc_incidence[i,]), theta));
   }
 
   // calculate transmission probability per age group
-  array[num_class] vector[num_t] prob_infection;
+  array[num_class] vector[num_t] rho;
   for ( j in 1:num_class){
    for (i in 1:num_t){
-      prob_infection[j][i] = ( analytical_bspline( b_hat, to_vector(a[j,]), ts[i], knots, order ));
+      rho[j][i] = ( analytical_bspline( b_hat, to_vector(alpha[j,]), ts[i], knots, order ));
    }
   }
 

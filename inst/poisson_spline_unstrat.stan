@@ -14,32 +14,34 @@ data {
   // load basic data objects that are needed independent of the exact specifications of the model
   // data objects that are generic independent of the model specifications
   int num_t;
+  int num_serosurvey;
   array[num_t] int ts;
   int popsize;
 
   // priors
   vector[2] p_I0; // expected initial seed (mean, sd)
-  vector[2] p_R0; // expected beta (alpha, beta)
+  vector[2] p_R0; // expected R0 (alpha, beta)
 
   // fixed quantities
   real generation_time;
-  int t_survey_start;
-  int t_survey_end;
-  int n_infected_survey;
-  int n_tested_survey;
+  array[num_serosurvey] int t_survey_start;
+  array[num_serosurvey] int t_survey_end;
+  array[num_serosurvey] int n_infected_survey;
+  array[num_serosurvey] int n_tested_survey;
 
-  int t_detectionSwitch;
   real beta_fixed;
-  real sens;
-  real spec;
-  real p_detect1;
+  array[num_serosurvey] real sens;
+  array[num_serosurvey] real spec;
 
   real fraction_pre;
 
-  // control parameters
+  // Tuning parameters
   real rtol;
   real atol;
   int max_num_steps;
+  int sampler;
+
+  // should the model be fitted?
   int inference;
 
   // load data objects related to the choosen time dependency
@@ -55,9 +57,6 @@ data {
   // load data objects for the type of stratification choosen
   real contact;
 
-  // load data element that defines what sampler should be used
-  int sampler;
-
 }
 
 transformed data {
@@ -69,21 +68,18 @@ transformed data {
 
   #include "/data/splines_transformed_data.stan"
 
-  array[7] int DIM = {num_comp, num_t, num_prev, popsize, num_basis, spline_degree,20};
+  array[8] int DIM = {num_comp, num_t, num_prev, popsize, num_basis, spline_degree, 20, num_serosurvey};
 
 }
 
 parameters {
   // generic parameters
-  // real<lower=0, upper=1> beta;           // transmission probability per contact
   real<lower=0> R0;
   real<lower=0> I0_raw;                 // initial seed (in number of individuals)
-  //real<lower=0.4, upper=0.6> fraction_pre; // fraction of the generation time spend in compartment E
-  //real<lower=0, upper=1> p_detect1; // ascertainmentrate first wave
-  real<lower=0, upper=1> p_detect2; // ascertainmentrate second wave
+  vector<lower=0, upper=1>[num_serosurvey] pi_;
 
   // paremeters dependent on type of time dependence
-  vector<lower=0>[num_basis-1] a_raw;              // coefficients for spline
+  vector<lower=0>[num_basis-1] alpha_init;              // coefficients for spline
 
 }
 
@@ -98,12 +94,12 @@ transformed parameters {
   real beta = ((R0*gamma)/contact)/beta_fixed;
 
   //real phi = 1./phi_inv;
-  row_vector[num_t] incidence;
+  vector[num_t] asc_incidence;
 
-  vector[num_basis] a;
-  a[1] = (beta); // can also be negative, as we use inv.logit insdide ODE
+  vector[num_basis] alpha;
+  alpha[1] = (beta); // can also be negative, as we use inv.logit insdide ODE
   for (i in 2:num_basis)
-    a[i] =  a_raw[i-1];      // a[i-1] + a_raw[i-1]*kappa;
+    alpha[i] =  alpha_init[i-1];
 
   // run ODE solver --> type of solver is selected based on variable "sampler"
   array[num_t] vector[num_comp] y = ode_rk45_tol(
@@ -112,49 +108,53 @@ transformed parameters {
     t0,                               // initial time = 0
     ts,                               // evaluation times
     rtol, atol, max_num_steps,        // tolerances
-    I0, knots, a, b_hat, order,       // parameters
+    I0, knots, alpha, b_hat, order,       // parameters
     tau, gamma, contact, beta_fixed,             // data
     DIM                               // metadata
     );
-    incidence = get_incidence(y, DIM, popsize, atol, I0, p_detect1, p_detect2, t_detectionSwitch);
-    real p_infected_survey = mean(to_vector(y[t_survey_start:t_survey_end, 4])) / popsize;
+  asc_incidence = get_incidence(y, DIM, popsize, atol, I0, pi_, t_survey_start, t_survey_end);
+
+  // given the SEIR dynamics, calculate the probability to observe a seropositive individual in the population
+  array[num_serosurvey] real cum_inf_frac;
+  for (q in 1:num_serosurvey){
+    cum_inf_frac[q] = mean(to_vector(y[t_survey_start[q]:t_survey_end[q], 4])) / popsize;
+  }
+
 
 }
 
 model {
   // Priors
   I0_raw ~ gamma(p_I0[1]^2/p_I0[2]^2,p_I0[1]/p_I0[2]^2);
-  //beta ~ beta(p_beta[1],p_beta[2]);
   R0 ~ gamma(p_R0[1],p_R0[2]);
-  a_raw ~ normal((p_R0[1]*gamma/contact)/beta_fixed, 0.1);
-  //fraction_pre ~ uniform(0.4, 0.6);
-  //p_detect1 ~ normal(0.1,0.1);
-  p_detect2 ~ normal(0.5,0.1);
+  alpha_init ~ normal((p_R0[1]*gamma/contact)/beta_fixed, 0.1);
+  pi_ ~ normal(0.5,0.1);
 
   // poisson model
   if (inference==1) {
-    n_infected_survey ~ binomial(n_tested_survey,p_infected_survey*sens + (1-p_infected_survey)*(1-spec));
-    target += poisson_lpmf( data_pre | incidence );
+    for (i in 1:num_serosurvey){
+      n_infected_survey[i] ~ binomial(n_tested_survey[i], cum_inf_frac[i]*sens[i] + (1-cum_inf_frac[i])*(1-spec[i]));
+    }
+    target += poisson_lpmf( data_pre | asc_incidence );
   }
 
 }
 
 generated quantities {
-
   // log-likelihood for LOO
   vector[num_t] log_lik;
 
   //  poisson
   for (t in 1:num_t)
-      log_lik[t] = poisson_lpmf( data_pre[t] | incidence[t] );
-      array[num_t] int I_t_simulated = data_pre;
+      log_lik[t] = poisson_lpmf( data_pre[t] | asc_incidence[t] );
+      array[num_t] int confirmed_cases_simulated = data_pre;
 
-  array[num_t] int I_t_predicted = poisson_rng( incidence );
+  array[num_t] int confirmed_cases_predicted = poisson_rng( asc_incidence );
 
   // calculate probability of infection
-  vector[num_t] prob_infection;
+  vector[num_t] rho;
   for (i in 1:num_t){
-    prob_infection[i] = inv_logit( analytical_bspline( b_hat, a, ts[i], knots, order ));
+    rho[i] = inv_logit( analytical_bspline( b_hat, alpha, ts[i], knots, order ));
   }
 
 }
