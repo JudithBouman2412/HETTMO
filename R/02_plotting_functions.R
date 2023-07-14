@@ -553,3 +553,4 @@ plot_compare = function(fitBM, fitSpline, fitGP, data, params,transmission_prob_
   full_plot
   return(full_plot)
 }
+
