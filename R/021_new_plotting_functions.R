@@ -49,7 +49,7 @@ plot_compare_sampling_GE = function (fit1, fit2, fit3, data, GE_data) {
   for(i in 1:3) {
     serop_date[i,"pos"] = sum(GE_data[[i]][[1]]$num_pos_tests)
     serop_date[i,"tested"] = sum(GE_data[[i]][[1]]$num_tested)
-    serop_date[i,"date"] = mean(c(ymd(GE_data[[i]][[2]]),ymd(GE_data[[i]][[3]])))
+    serop_date[i,"date"] = mean(c(lubricate::ymd(GE_data[[i]][[2]]),lubricate::ymd(GE_data[[i]][[3]])))
   }
   serop_date$prop = serop_date$pos/serop_date$tested
 

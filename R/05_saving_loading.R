@@ -9,6 +9,7 @@
 #'
 #' @examples
 save_stan_result <- function(stan_result, base_name, dir){
+
   temp_file_posterior <- paste0(dir, base_name, "_posterior.RDS" )
   posterior <- stan_result$samples_posterior
   posterior$save_object(file = temp_file_posterior)
@@ -17,7 +18,9 @@ save_stan_result <- function(stan_result, base_name, dir){
   prior$save_object(file = temp_file_prior)
   saveRDS(stan_result$data_list, file = paste0(dir, base_name, "_datalist.RDS"))
   saveRDS(stan_result$diagnostics, file = paste0(dir, base_name, "_diagnostics.RDS"))
+
 }
+
 #' Read in model results
 #'
 #' @param base_name
@@ -28,9 +31,11 @@ save_stan_result <- function(stan_result, base_name, dir){
 #'
 #' @examples
 read_stan_result <- function(base_name, dir ){
+
   samples_posterior <- readRDS( file =  paste0(dir, base_name, "_posterior.RDS" ) )
   samples_prior <- readRDS( file =  paste0(dir, base_name, "_prior.RDS" ) )
   data_list <- readRDS( file =  paste0(dir, base_name, "_datalist.RDS" ) )
   diagnostics <- readRDS( file =  paste0(dir, base_name, "_diagnostics.RDS" ) )
+
   return(list(samples_posterior=samples_posterior, samples_prior=samples_prior, data_list=data_list, diagnostics=diagnostics))
 }
