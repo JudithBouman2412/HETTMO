@@ -520,6 +520,8 @@ plot_fitsim_strat = function(fit, sim_data, params=params, transmission_prob_sim
   return(full_plot2)
 }
 
+
+
 plot_unstrat_BM = function(summ) {
   cust_cols2 = c("dodgerblue","chartreuse3","orange")
   cust_shapes = c("1"=8,
