@@ -190,7 +190,7 @@ create_function_initial_values <- function(data_list,
     }
   } else {
     initial_value_list$beta=rep(truncnorm::rtruncnorm(1,0,1,data_list$p_beta[1], data_list$p_beta[2]),3)
-    initial_value_list$I0_raw=rep(stats::rgamma(1,data_list$p_I0[1]),3)
+    initial_value_list$I0_raw=rep(stats::rgamma(data_list$num_class,data_list$p_I0[1]),3)
     initial_value_list$alpha=rbind(truncnorm::rtruncnorm(data_list$num_knots+2, a=0, b = Inf, ( data_list$p_beta[1]), 0.1) ,
                                    truncnorm::rtruncnorm(data_list$num_knots+2, a=0, b = Inf, ( data_list$p_beta[1]), 0.1) ,
                                    truncnorm::rtruncnorm(data_list$num_knots+2, a=0, b = Inf, ( data_list$p_beta[1]), 0.1) )

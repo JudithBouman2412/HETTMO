@@ -99,7 +99,7 @@ plot_compare_sampling_GE = function (fit1, fit2, fit3, data, GE_data) {
     scale_colour_manual(values=cust_cols) +
     scale_fill_manual(values=cust_cols) +
     guides(fill = "none", colour="none")  +
-    labs(x="Time",y="Laboratory-confirmed cases",shape=NULL,fill=NULL,colour=NULL) +
+    labs(x=element_blank(),y="Laboratory-confirmed cases",shape=NULL,fill=NULL,colour=NULL) +
     theme(legend.position=c(.3,.95),
           legend.background = element_blank()) +
     scale_y_continuous(
@@ -275,7 +275,7 @@ plot_unstrat_model_fit = function(fit1,fit2,fit3,data_cases,data_prob,params) {
     scale_fill_manual(values=cust_cols2) +
     scale_colour_manual(values=cust_cols2) +
     guides(fill = "none", colour="none")  +
-    labs(x="Time",y="Confirmed cases",shape=NULL,fill=NULL,colour=NULL) +
+    labs(x="Time (weeks)",y="Confirmed cases",shape=NULL,fill=NULL,colour=NULL) +
     theme(legend.position=c(.3,.9),
           legend.background = element_blank())
 
@@ -307,7 +307,7 @@ plot_unstrat_model_fit = function(fit1,fit2,fit3,data_cases,data_prob,params) {
     scale_colour_manual(values=cust_cols2,guide="none") +
     theme(legend.position=c(.3,.9),
           legend.background = element_blank()) +
-    labs(shape=NULL,x="Time",y=expression(rho(t)))
+    labs(shape=NULL,x="Time (weeks)",y=expression(rho(t)))
 
   # ascertainment
   dat_asc = data.frame(variable = "Transmission_probability",
@@ -346,7 +346,7 @@ plot_unstrat_model_fit = function(fit1,fit2,fit3,data_cases,data_prob,params) {
     scale_colour_manual(values=cust_cols2) +
     theme(legend.position="right",
           legend.background = element_blank()) +
-    labs(shape=NULL,x="Time",y=expression(rho(t)),colour=
+    labs(shape=NULL,x="Time (weeks)",y=expression(rho(t)),colour=
            "Time-varying transmission",fill="Time-varying transmission")
 
   leg = ggpubr::get_legend(gx)
@@ -450,7 +450,7 @@ plot_fitsim_strat = function(fit, sim_data, params=params, transmission_prob_sim
     scale_colour_manual(values=cust_cols) +
     scale_fill_manual(values=cust_cols) +
     scale_shape_manual(values=c("Confirmed cases (simulated)"=4,"Seroprevalence (simulated)"=3)) +
-    labs(x="Time",y="Laboratory-confirmed cases",shape=NULL,fill=NULL,colour=NULL) +
+    labs(x="Time (weeks)",y="Laboratory-confirmed cases",shape=NULL,fill=NULL,colour=NULL) +
     theme(text=element_text(size=16), legend.position=c(.45,.25),legend.background = element_blank()) +
     scale_y_continuous(
       "Laboratory-confirmed cases",
@@ -488,7 +488,7 @@ plot_fitsim_strat = function(fit, sim_data, params=params, transmission_prob_sim
     scale_colour_manual(values=cust_cols,guide="none") +
     scale_shape_manual(values=c("True value"=4)) +
     scale_fill_manual(values=cust_cols,guide="none") +
-    labs(x="Time",y=expression(rho(t)),shape=NULL,fill=NULL,colour=NULL) +
+    labs(x="Time (weeks)",y=expression(rho(t)),shape=NULL,fill=NULL,colour=NULL) +
     theme(text=element_text(size=16), legend.position=c(.25,.25), legend.background = element_blank())
 
   # plot of ascertainment rate
@@ -519,3 +519,115 @@ plot_fitsim_strat = function(fit, sim_data, params=params, transmission_prob_sim
 
   return(full_plot2)
 }
+
+plot_unstrat_BM = function(summ) {
+  cust_cols2 = c("dodgerblue","chartreuse3","orange")
+  cust_shapes = c("1"=8,
+                  "2"=7,
+                  "3"=0,
+                  "4"=6,
+                  "5"=5,
+                  "NA"=1)
+  summ = summ %>%
+    dplyr::mutate(type2=factor(type,levels=c("BM","spline","GP"),labels=c("Brownian motion","B-splines","Gaussian process")),
+                  knot_sequence=ifelse(knot_sequence=="No knots","NA",knot_sequence))
+  g1 = summ %>%
+    ggplot() +
+    geom_point(aes(x = 1/time_per_ESS, y = RMSE_prob, colour = type2, shape = knot_sequence),size=2) +
+    scale_colour_manual(values = cust_cols2,guide="none")+
+    scale_x_continuous(trans='log10') +
+    scale_shape_manual(values=cust_shapes,guide="none") +
+    labs(x="ESS per second", y="Error" , colour=NULL, fill=NULL, shape="Knot sequence") +
+    # guides(shape=guide_legend(ncol=2)) +
+    theme(legend.position=c(.25,.8),
+          legend.background = element_blank())
+
+  g2 = summ %>%
+    ggplot() +
+    geom_point(aes(x = 1/time_per_ESS, y = CI_size_prob, colour = type2, shape = knot_sequence),size=2) +
+    scale_colour_manual(values = cust_cols2,guide="none")+
+    scale_x_continuous(trans='log10') +
+    scale_shape_manual(values=cust_shapes) +
+    labs(x="ESS per second", y="Sharpness" , colour=NULL, fill=NULL, shape="Knot sequence") +
+    # guides(shape=guide_legend(ncol=2)) +
+    theme(legend.position=c(.25,.4),
+          legend.background = element_blank())
+  g = cowplot::plot_grid(g1,g2,nrow=1,labels=c("E","F"))
+
+  return(g)
+}
+
+plot_unstrat_spline = function(summ) {
+  cust_cols2 = c("dodgerblue","chartreuse3","orange")
+  cust_shapes = c("1"=8,
+                  "2"=7,
+                  "3"=0,
+                  "4"=6,
+                  "5"=5,
+                  "NA"=1)
+  summ = summ %>%
+    dplyr::mutate(type2=factor(type,levels=c("BM","spline","GP"),labels=c("Brownian motion","B-splines","Gaussian process")),
+                  knot_sequence=ifelse(knot_sequence=="No knots","NA",knot_sequence))
+  g1 = summ %>%
+    ggplot() +
+    geom_point(aes(x = 1/time_per_ESS, y = RMSE_prob, colour = type2, shape = knot_sequence),size=2) +
+    scale_colour_manual(values = cust_cols2,guide="none")+
+    scale_x_continuous(trans='log10') +
+    scale_shape_manual(values=cust_shapes,guide="none") +
+    labs(x="ESS per second", y="Error" , colour=NULL, fill=NULL, shape="Knot sequence") +
+    # guides(shape=guide_legend(ncol=2)) +
+    theme(legend.position=c(.25,.8),
+          legend.background = element_blank())
+
+  g2 = summ %>%
+    ggplot() +
+    geom_point(aes(x = 1/time_per_ESS, y = CI_size_prob, colour = type2, shape = knot_sequence),size=2) +
+    scale_colour_manual(values = cust_cols2,guide="none")+
+    scale_x_continuous(trans='log10') +
+    scale_shape_manual(values=cust_shapes) +
+    labs(x="ESS per second", y="Sharpness" , colour=NULL, fill=NULL, shape="Knot sequence") +
+    # guides(shape=guide_legend(ncol=2)) +
+    theme(legend.position=c(.25,.4),
+          legend.background = element_blank())
+  g = cowplot::plot_grid(g1,g2,nrow=1,labels=c("E","F"))
+
+  return(g)
+}
+
+plot_unstrat_GP = function(summ) {
+  cust_cols2 = c("dodgerblue","chartreuse3","orange")
+  cust_shapes = c("1"=8,
+                  "2"=7,
+                  "3"=0,
+                  "4"=6,
+                  "5"=5,
+                  "NA"=1)
+  summ = summ %>%
+    dplyr::mutate(type2=factor(type,levels=c("BM","spline","GP"),labels=c("Brownian motion","B-splines","Gaussian process")),
+                  knot_sequence=ifelse(knot_sequence=="No knots","NA",knot_sequence))
+  g1 = summ %>%
+    ggplot() +
+    geom_point(aes(x = 1/time_per_ESS, y = RMSE_prob, colour = type2, shape = knot_sequence),size=2) +
+    scale_colour_manual(values = cust_cols2,guide="none")+
+    scale_x_continuous(trans='log10') +
+    scale_shape_manual(values=cust_shapes,guide="none") +
+    labs(x="ESS per second", y="Error" , colour=NULL, fill=NULL, shape="Knot sequence") +
+    # guides(shape=guide_legend(ncol=2)) +
+    theme(legend.position=c(.25,.8),
+          legend.background = element_blank())
+
+  g2 = summ %>%
+    ggplot() +
+    geom_point(aes(x = 1/time_per_ESS, y = CI_size_prob, colour = type2, shape = knot_sequence),size=2) +
+    scale_colour_manual(values = cust_cols2,guide="none")+
+    scale_x_continuous(trans='log10') +
+    scale_shape_manual(values=cust_shapes) +
+    labs(x="ESS per second", y="Sharpness" , colour=NULL, fill=NULL, shape="Knot sequence") +
+    # guides(shape=guide_legend(ncol=2)) +
+    theme(legend.position=c(.25,.4),
+          legend.background = element_blank())
+  g = cowplot::plot_grid(g1,g2,nrow=1,labels=c("E","F"))
+
+  return(g)
+}
+
