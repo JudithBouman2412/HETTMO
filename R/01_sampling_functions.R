@@ -115,9 +115,9 @@ standata <- function( data,
       fixed_pars$t_survey_start = c(6, 14, 39) #begin_week
       fixed_pars$t_survey_end = c(10, 17, 44) #end_week
 
-      fixed_pars$n_infected_survey = cbind(dditional_data$sero_1[[1]]$num_pos_tests,
-                                           c(0,dditional_data$sero_1[[2]]$num_pos_tests),
-                                           c(0,dditional_data$sero_1[[3]]$num_pos_tests))
+      fixed_pars$n_infected_survey = cbind(additional_data$sero_1[[1]]$num_pos_tests,
+                                           c(0,additional_data$sero_1[[2]]$num_pos_tests),
+                                           c(0,additional_data$sero_1[[3]]$num_pos_tests))
       fixed_pars$n_tested_survey = cbind(additional_data$sero_1[[1]]$num_tested,
                                          additional_data$sero_1[[2]]$num_tested,
                                          additional_data$sero_1[[3]]$num_tested)

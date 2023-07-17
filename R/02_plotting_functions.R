@@ -220,120 +220,120 @@ plot_comparesim = function(fit1, fit2, fit3 , data) {
   return(list(full_plot, prob_plot))
 }
 
-#' plot_fitsim_strat
+#' #' plot_fitsim_strat
+#' #'
+#' #' Function that produces Figure to visualize stratified model fit to simulated data.
+#' #'
+#' #' @param fit fit of stratified model, result of "sampling_model"
+#' #' @param sim_data array of simulated positive PCR cases per week and age-class.
+#' #' @param params list of parameters used to simulate the data, result of "set_parameters".
+#' #' @param transmission_prob_sim array of simulated rho value per week per age-class.
+#' #'
+#' #' @return Figure of result of simulated, stratified model.
+#' #' @export
+#' #'
+#' #' @examples
+#' plot_fitsim_strat = function(fit, sim_data, params=params, transmission_prob_sim) {
 #'
-#' Function that produces Figure to visualize stratified model fit to simulated data.
+#'   # aesthetics
+#'   ggplot2::theme_set(ggplot2::theme_bw())
+#'   bayesplot::color_scheme_set("teal")
+#'   col_prior = "grey70"
+#'   col_post = "orange"
+#'   col_simul = "cyan3"
 #'
-#' @param fit fit of stratified model, result of "sampling_model"
-#' @param sim_data array of simulated positive PCR cases per week and age-class.
-#' @param params list of parameters used to simulate the data, result of "set_parameters".
-#' @param transmission_prob_sim array of simulated rho value per week per age-class.
+#'   # posterior predictive check
+#'   dat_ = data.frame(variable = "I_t_simulated", time = 1:dim(sim_data)[1], null = "", median = sim_data )
+#'   post_ = fit$samples_posterior$summary(c("I_t_predicted")) |>
+#'     tidyr::separate(variable,"\\[|\\]",into=c("variable","step", "NULL")) |>
+#'     tidyr::separate(step,",",into=c("age_group","time"))
+#'   prior_ = fit$samples_prior$summary(c("I_t_predicted")) |>
+#'     tidyr::separate(variable,"\\[|\\]",into=c("variable","step", "NULL")) |>
+#'     tidyr::separate(step,",",into=c("age_group","time"))
 #'
-#' @return Figure of result of simulated, stratified model.
-#' @export
+#'   g1 = ggplot() +
+#'     #geom_ribbon(data=post_ |>  filter(age_group==2), aes(x=as.numeric(time),ymin=q5,ymax=q95,fill="Prior predictive check"),alpha=.3) +
+#'     geom_ribbon(data=post_ |>  filter(age_group==1), aes(x=as.numeric(time),ymin=q5,ymax=q95,fill="Age group 1"),alpha=.3) +
+#'     geom_line(data=post_ |>  filter(age_group==1),aes(x=as.numeric(time),y=median,colour="Age group 1")) +
+#'     geom_ribbon(data=post_ |>  filter(age_group==2), aes(x=as.numeric(time),ymin=q5,ymax=q95,fill="Age group 2"),alpha=.3) +
+#'     geom_line(data=post_ |>  filter(age_group==2),aes(x=as.numeric(time),y=median,colour="Age group 2")) +
+#'     geom_ribbon(data=post_ |>  filter(age_group==3), aes(x=as.numeric(time),ymin=q5,ymax=q95,fill="Age group 3"),alpha=.3) +
+#'     geom_line(data=post_ |>  filter(age_group==3),aes(x=as.numeric(time),y=median,colour="Age group 3")) +
+#'     geom_point(data=dat_ ,aes(x=as.numeric(time),y=median.1, colour="Age group 1")) +
+#'     geom_point(data=dat_ ,aes(x=as.numeric(time),y=median.2, colour="Age group 2")) +
+#'     geom_point(data=dat_ ,aes(x=as.numeric(time),y=median.3, colour="Age group 3")) +
+#'     scale_fill_manual(values=c("Age group 1"=col_simul,
+#'                                "Age group 2"="orange",
+#'                                "Age group 3"="red")) +
+#'     scale_colour_manual(values=c("Age group 1"=col_simul,
+#'                                  "Age group 2"="orange",
+#'                                  "Age group 3"="red" )) +
+#'     #scale_y_continuous(trans='log10') +
+#'     labs(x="Time (weeks)",y="PCR confirmed cases per week",colour=NULL,fill=NULL) +
+#'     theme(legend.position = "none", text=element_text(size=16))
 #'
-#' @examples
-plot_fitsim_strat = function(fit, sim_data, params=params, transmission_prob_sim) {
-
-  # aesthetics
-  ggplot2::theme_set(ggplot2::theme_bw())
-  bayesplot::color_scheme_set("teal")
-  col_prior = "grey70"
-  col_post = "orange"
-  col_simul = "cyan3"
-
-  # posterior predictive check
-  dat_ = data.frame(variable = "I_t_simulated", time = 1:dim(sim_data)[1], null = "", median = sim_data )
-  post_ = fit$samples_posterior$summary(c("I_t_predicted")) |>
-    tidyr::separate(variable,"\\[|\\]",into=c("variable","step", "NULL")) |>
-    tidyr::separate(step,",",into=c("age_group","time"))
-  prior_ = fit$samples_prior$summary(c("I_t_predicted")) |>
-    tidyr::separate(variable,"\\[|\\]",into=c("variable","step", "NULL")) |>
-    tidyr::separate(step,",",into=c("age_group","time"))
-
-  g1 = ggplot() +
-    #geom_ribbon(data=post_ |>  filter(age_group==2), aes(x=as.numeric(time),ymin=q5,ymax=q95,fill="Prior predictive check"),alpha=.3) +
-    geom_ribbon(data=post_ |>  filter(age_group==1), aes(x=as.numeric(time),ymin=q5,ymax=q95,fill="Age group 1"),alpha=.3) +
-    geom_line(data=post_ |>  filter(age_group==1),aes(x=as.numeric(time),y=median,colour="Age group 1")) +
-    geom_ribbon(data=post_ |>  filter(age_group==2), aes(x=as.numeric(time),ymin=q5,ymax=q95,fill="Age group 2"),alpha=.3) +
-    geom_line(data=post_ |>  filter(age_group==2),aes(x=as.numeric(time),y=median,colour="Age group 2")) +
-    geom_ribbon(data=post_ |>  filter(age_group==3), aes(x=as.numeric(time),ymin=q5,ymax=q95,fill="Age group 3"),alpha=.3) +
-    geom_line(data=post_ |>  filter(age_group==3),aes(x=as.numeric(time),y=median,colour="Age group 3")) +
-    geom_point(data=dat_ ,aes(x=as.numeric(time),y=median.1, colour="Age group 1")) +
-    geom_point(data=dat_ ,aes(x=as.numeric(time),y=median.2, colour="Age group 2")) +
-    geom_point(data=dat_ ,aes(x=as.numeric(time),y=median.3, colour="Age group 3")) +
-    scale_fill_manual(values=c("Age group 1"=col_simul,
-                               "Age group 2"="orange",
-                               "Age group 3"="red")) +
-    scale_colour_manual(values=c("Age group 1"=col_simul,
-                                 "Age group 2"="orange",
-                                 "Age group 3"="red" )) +
-    #scale_y_continuous(trans='log10') +
-    labs(x="Time (weeks)",y="PCR confirmed cases per week",colour=NULL,fill=NULL) +
-    theme(legend.position = "none", text=element_text(size=16))
-
-  # compare prior, data and posterior
-  sim_ = (rbind( "I0"=params$I0, "theta"=params$theta,
-                 "p_detect2" = params$p_detect2))
-  colnames(sim_) <- "median"
-
-  sim_ = as_tibble(sim_) |>
-    dplyr::mutate(variable=median,
-                  type="Chosen value",
-                  median=median,q5=median,q95=median,
-                  variable = c("I0", "theta", "p_detect2" ))
-
-  sim_ = sim_ |>  mutate_at( "variable", as.character )
-
-  post_2 = fit$samples_posterior$summary(c("I0_raw", "theta", "p_detect2" )) |>
-    dplyr::mutate(type="Posterior distribution", median = median, q5 = q5, q95=q95)
-
-  prior_2 = fit$samples_prior$summary(c("I0_raw", "theta", "p_detect2"))  |>
-    dplyr::mutate(type="Prior distribution")
-
-  dat_g2 <- dplyr::bind_rows(sim_,post_2,prior_2) |>
-    dplyr::mutate(type=factor(type,levels=c("Posterior distribution","Chosen value","Prior distribution")),
-                  variable=gsub("_raw","",variable))
-
-  g2 =  ggplot( dat_g2 ) +
-    geom_pointrange(aes(x=type,y=median,ymin=q5,ymax=q95,colour=type,shape=type)) +
-    facet_wrap(~variable,scales="free",ncol=3) +
-    scale_shape_manual(values=c(16,15,95),guide="none") +
-    scale_colour_manual(values=c(col_post,col_simul,col_prior),guide="none") +
-    coord_flip() +
-    labs(x=NULL,y="Parameter values (median and 90% CrI)")
-
-  dat_prob = data.frame(variable = "Transmission_probability", time = 1:dim(sim_data)[1], null = "", median = transmission_prob_sim )
-  post_prob = fit$samples_posterior$summary(c("prob_infection")) |>
-    tidyr::separate(variable,"\\[|\\]",into=c("variable","step", "NULL")) |>
-    tidyr::separate(step,",",into=c("age_group","time"))
-  prior_prob = fit$samples_prior$summary(c("prob_infection")) |>
-    tidyr::separate(variable,"\\[|\\]",into=c("variable","step", "NULL")) |>
-    tidyr::separate(step,",",into=c("age_group","time"))
-  g1prob = ggplot() +
-    geom_ribbon(data=post_prob |>  filter(age_group==1),aes(x=as.numeric(time), ymin=q5,ymax=q95,fill="Age group 1"),alpha=.3) +
-    geom_ribbon(data=post_prob |>  filter(age_group==2),aes(x=as.numeric(time), ymin=q5,ymax=q95,fill="Age group 2"),alpha=.3) +
-    geom_ribbon(data=post_prob |>  filter(age_group==3),aes(x=as.numeric(time), ymin=q5,ymax=q95,fill="Age group 3"),alpha=.3) +
-    #geom_ribbon(data=pred_,aes(x=as.numeric(time),ymin=q5,ymax=q95,fill="Posterior predictive check"),alpha=.3) +
-    geom_line(data=post_prob|>  filter(age_group==1),aes(x=as.numeric(time),y=median,colour="Age group 1")) +
-    geom_line(data=post_prob|>  filter(age_group==2),aes(x=as.numeric(time),y=median,colour="Age group 2")) +
-    geom_line(data=post_prob|>  filter(age_group==3),aes(x=as.numeric(time),y=median,colour="Age group 3")) +
-    geom_line(data=dat_prob,aes(x=as.numeric(time),y=median.1,colour="Age group 1"), linetype = "dashed") +
-    geom_line(data=dat_prob,aes(x=as.numeric(time),y=median.2,colour="Age group 2"), linetype = "dashed") +
-    geom_line(data=dat_prob,aes(x=as.numeric(time),y=median.3,colour="Age group 3"), linetype = "dashed") +
-    scale_fill_manual(values=c("Age group 1"=col_simul,
-                               "Age group 2"="orange",
-                               "Age group 3"="red")) +
-    scale_colour_manual(values=c("Age group 1"=col_simul,
-                                 "Age group 2"="orange",
-                                 "Age group 3"="red" )) +
-    labs(x="Time (weeks)",y="Rho",colour=NULL,fill=NULL) +
-    theme(legend.position = "bottom",text=element_text(size=16))
-
-  full_plot <- cowplot::plot_grid(g1,g1prob,nrow=2,labels=LETTERS)
-
-  return(full_plot)
-}
+#'   # compare prior, data and posterior
+#'   sim_ = (rbind( "I0"=params$I0, "theta"=params$theta,
+#'                  "p_detect2" = params$p_detect2))
+#'   colnames(sim_) <- "median"
+#'
+#'   sim_ = as_tibble(sim_) |>
+#'     dplyr::mutate(variable=median,
+#'                   type="Chosen value",
+#'                   median=median,q5=median,q95=median,
+#'                   variable = c("I0", "theta", "p_detect2" ))
+#'
+#'   sim_ = sim_ |>  mutate_at( "variable", as.character )
+#'
+#'   post_2 = fit$samples_posterior$summary(c("I0_raw", "theta", "p_detect2" )) |>
+#'     dplyr::mutate(type="Posterior distribution", median = median, q5 = q5, q95=q95)
+#'
+#'   prior_2 = fit$samples_prior$summary(c("I0_raw", "theta", "p_detect2"))  |>
+#'     dplyr::mutate(type="Prior distribution")
+#'
+#'   dat_g2 <- dplyr::bind_rows(sim_,post_2,prior_2) |>
+#'     dplyr::mutate(type=factor(type,levels=c("Posterior distribution","Chosen value","Prior distribution")),
+#'                   variable=gsub("_raw","",variable))
+#'
+#'   g2 =  ggplot( dat_g2 ) +
+#'     geom_pointrange(aes(x=type,y=median,ymin=q5,ymax=q95,colour=type,shape=type)) +
+#'     facet_wrap(~variable,scales="free",ncol=3) +
+#'     scale_shape_manual(values=c(16,15,95),guide="none") +
+#'     scale_colour_manual(values=c(col_post,col_simul,col_prior),guide="none") +
+#'     coord_flip() +
+#'     labs(x=NULL,y="Parameter values (median and 90% CrI)")
+#'
+#'   dat_prob = data.frame(variable = "Transmission_probability", time = 1:dim(sim_data)[1], null = "", median = transmission_prob_sim )
+#'   post_prob = fit$samples_posterior$summary(c("prob_infection")) |>
+#'     tidyr::separate(variable,"\\[|\\]",into=c("variable","step", "NULL")) |>
+#'     tidyr::separate(step,",",into=c("age_group","time"))
+#'   prior_prob = fit$samples_prior$summary(c("prob_infection")) |>
+#'     tidyr::separate(variable,"\\[|\\]",into=c("variable","step", "NULL")) |>
+#'     tidyr::separate(step,",",into=c("age_group","time"))
+#'   g1prob = ggplot() +
+#'     geom_ribbon(data=post_prob |>  filter(age_group==1),aes(x=as.numeric(time), ymin=q5,ymax=q95,fill="Age group 1"),alpha=.3) +
+#'     geom_ribbon(data=post_prob |>  filter(age_group==2),aes(x=as.numeric(time), ymin=q5,ymax=q95,fill="Age group 2"),alpha=.3) +
+#'     geom_ribbon(data=post_prob |>  filter(age_group==3),aes(x=as.numeric(time), ymin=q5,ymax=q95,fill="Age group 3"),alpha=.3) +
+#'     #geom_ribbon(data=pred_,aes(x=as.numeric(time),ymin=q5,ymax=q95,fill="Posterior predictive check"),alpha=.3) +
+#'     geom_line(data=post_prob|>  filter(age_group==1),aes(x=as.numeric(time),y=median,colour="Age group 1")) +
+#'     geom_line(data=post_prob|>  filter(age_group==2),aes(x=as.numeric(time),y=median,colour="Age group 2")) +
+#'     geom_line(data=post_prob|>  filter(age_group==3),aes(x=as.numeric(time),y=median,colour="Age group 3")) +
+#'     geom_line(data=dat_prob,aes(x=as.numeric(time),y=median.1,colour="Age group 1"), linetype = "dashed") +
+#'     geom_line(data=dat_prob,aes(x=as.numeric(time),y=median.2,colour="Age group 2"), linetype = "dashed") +
+#'     geom_line(data=dat_prob,aes(x=as.numeric(time),y=median.3,colour="Age group 3"), linetype = "dashed") +
+#'     scale_fill_manual(values=c("Age group 1"=col_simul,
+#'                                "Age group 2"="orange",
+#'                                "Age group 3"="red")) +
+#'     scale_colour_manual(values=c("Age group 1"=col_simul,
+#'                                  "Age group 2"="orange",
+#'                                  "Age group 3"="red" )) +
+#'     labs(x="Time (weeks)",y="Rho",colour=NULL,fill=NULL) +
+#'     theme(legend.position = "bottom",text=element_text(size=16))
+#'
+#'   full_plot <- cowplot::plot_grid(g1,g1prob,nrow=2,labels=LETTERS)
+#'
+#'   return(full_plot)
+#' }
 
 #' plot_fitsim_strat_realdata
 #'
