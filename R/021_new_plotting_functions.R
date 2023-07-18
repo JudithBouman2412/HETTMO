@@ -522,6 +522,14 @@ plot_fitsim_strat = function(fit, sim_data, params=params, transmission_prob_sim
 
 
 
+#' Title
+#'
+#' @param summ
+#'
+#' @return
+#' @export
+#'
+#' @examples
 plot_single_benchmark = function(summ) {
 
   ggplot2::theme_set(ggplot2::theme_bw())

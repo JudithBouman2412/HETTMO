@@ -43,7 +43,7 @@ vector seir_2d_spline(real t,
                       real gamma,
                       data matrix contact,
                       data real beta_fixed,
-                      data vector popdist,
+                      vector popdist,
                       data array[] int DIM) {
   // dimensions
   int num_comp = DIM[1];
@@ -149,6 +149,7 @@ array[] vector solve_ode_system_trapezoidal_2d( vector initial_state,
                                            real gamma,
                                            data real contact,
                                            data real beta_fixed,
+                                           vector popdist,
                                            data array[] int DIM
                                            ) {
 
@@ -178,20 +179,20 @@ array[] vector solve_ode_system_trapezoidal_2d( vector initial_state,
 
       ts_sub[q+1] = ts_sub[q] + stepsize_sub;
 
-      vector[num_eq] k1 = seir_2d_spline(ts_sub[q], ytemp, I0, knots, a, b_hat, order, tau, gamma, contact, beta_fixed, DIM);
+      vector[num_eq] k1 = seir_2d_spline(ts_sub[q], ytemp, I0, knots, a, b_hat, order, tau, gamma, contact, beta_fixed, popdist, DIM);
 
       for (j in 1:num_eq) ytemp[j] = ytemp[j] + stepsize_sub * k1[j];
 
-      vector[num_eq] k2 = seir_2d_spline(ts_sub[q+1], ytemp, I0, knots, a, b_hat, order, tau, gamma, contact, beta_fixed, DIM);
+      vector[num_eq] k2 = seir_2d_spline(ts_sub[q+1], ytemp, I0, knots, a, b_hat, order, tau, gamma, contact, beta_fixed, popdist, DIM);
 
       for (j in 1:num_eq) ys_sub[q+1][j] = ys_sub[q][j] + stepsize_sub * (k1[j] + k2[j]) / 2;
     }
 
-    vector[num_eq] k3 = seir_2d_spline(ts_sub[N_hsub], ytemp, I0, knots, a, b_hat, order, tau, gamma, contact, beta_fixed, DIM);
+    vector[num_eq] k3 = seir_2d_spline(ts_sub[N_hsub], ytemp, I0, knots, a, b_hat, order, tau, gamma, contact, beta_fixed, popdist, DIM);
 
     for (j in 1:num_eq) ytemp[j] = ytemp[j] + stepsize_sub * k3[j];
 
-    vector[num_eq] k4 = seir_2d_spline(ts[i], ytemp, I0, knots, a, b_hat, order, tau, gamma, contact, beta_fixed, DIM);
+    vector[num_eq] k4 = seir_2d_spline(ts[i], ytemp, I0, knots, a, b_hat, order, tau, gamma, contact, beta_fixed, popdist, DIM);
 
     for (j in 1:num_eq) ys[i][j] = ys_sub[N_hsub][j] + stepsize_sub * (k3[j] + k4[j]) / 2;
 
