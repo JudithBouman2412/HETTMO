@@ -97,11 +97,11 @@ standata <- function( data,
       # homogeneous specific parameters
       fixed_pars$contact = 50
       fixed_pars$n_tested_survey = c(sum(seroprev_dat[[1]]$num_tested),
-                                     sum(seroprev_dat[[1]]$num_tested),
-                                     sum(seroprev_dat[[1]]$num_tested))
+                                     sum(seroprev_dat[[2]]$num_tested),
+                                     sum(seroprev_dat[[3]]$num_tested))
       fixed_pars$n_infected_survey = c(sum(seroprev_dat[[1]]$num_pos_tests),
-                                       sum(seroprev_dat[[1]]$num_pos_tests),
-                                       sum(seroprev_dat[[1]]$num_pos_tests))
+                                       sum(seroprev_dat[[2]]$num_pos_tests),
+                                       sum(seroprev_dat[[3]]$num_pos_tests))
       fixed_pars$popsize = 499480
       fixed_pars$data_pre=data
       fixed_pars$t_survey_start = c(6, 14, 39) #begin_week
