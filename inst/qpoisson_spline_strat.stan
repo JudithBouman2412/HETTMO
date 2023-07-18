@@ -100,7 +100,7 @@ transformed parameters {
         DIM                               // metadata
         );
   } else if (sampler == 0 ){
-    y = solve_ode_system_trapezoidal( rep_vector(0.0,num_eq),
+    y = solve_ode_system_trapezoidal_2d( rep_vector(0.0,num_eq),
                                     ts,
                                     I0, knots, alpha, b_hat, order,
                                     tau, gamma, contact, beta_fixed,
