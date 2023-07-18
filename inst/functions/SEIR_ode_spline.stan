@@ -48,7 +48,7 @@ vector seir_2d_spline(real t,
   // dimensions
   int num_comp = DIM[1];
   int num_class = DIM[6];
-  int num_eq = DIM[7];
+  int num_eq = DIM[8];
 
   // define equations
   vector[num_eq] dydt;
