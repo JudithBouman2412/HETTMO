@@ -124,7 +124,7 @@ standata <- function( data,
       fixed_pars$num_class = 3
       fixed_pars$num_age = 3
       fixed_pars$num_sex = 1
-      fixed_pars$p_beta = c(0.1, 0.1)
+      fixed_pars$p_beta = c(0.8, 0.1)
     }
   }
 
