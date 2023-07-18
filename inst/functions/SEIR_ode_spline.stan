@@ -147,7 +147,7 @@ array[] vector solve_ode_system_trapezoidal_2d( vector initial_state,
                                            data int order,
                                            real tau,
                                            real gamma,
-                                           data real contact,
+                                           data matrix contact,
                                            data real beta_fixed,
                                            vector popdist,
                                            data array[] int DIM
