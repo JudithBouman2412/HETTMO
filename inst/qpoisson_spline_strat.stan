@@ -130,12 +130,11 @@ model {
   //beta ~ normal(p_beta[1],p_beta[2]);
 
   for (i in 1:num_class){
-    alpha[i][] ~ normal( (p_beta[1]), 0.1 ); // better informative prior --> update to more stable method for overfitting see ref. manual
+    alpha[i,] ~ normal( (p_beta[1]), 0.1 ); // better informative prior --> update to more stable method for overfitting see ref. manual
+    pi_[i,] ~ normal(0.5,0.1);
   }
 
   theta ~ normal( p_theta[1], p_theta[2]);
-  //fraction_pre ~ uniform(0.4, 0.6);
-  pi_ ~ normal(0.5,0.1);
 
   // likelihood
   if(inference==1){

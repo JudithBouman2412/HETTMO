@@ -13,9 +13,9 @@ array[,] real get_incidence( array[] vector y , data array[] int DIM,
   }
 
   for (j in 1:num_class){
-    inc[j,1] = pi_[j][1] * (y[1][ind(4, j, num_class)] + 1);
+    inc[j,1] = pi_[j,1] * (y[1][ind(4, j, num_class)] + 1);
     for (i in 2:num_t){ // maybe do a vector multiplication instead to make it faster?
-        inc[j,i] = ascertainment_perweek[j][i] * (y[i][ind(4, j, num_class)] - y[i-1][ind(4, j, num_class)] + 1);
+        inc[j,i] = ascertainment_perweek[j,i] * (y[i][ind(4, j, num_class)] - y[i-1][ind(4, j, num_class)] + 1);
     }
   }
 
