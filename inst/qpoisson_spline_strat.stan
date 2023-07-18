@@ -127,7 +127,6 @@ transformed parameters {
 model {
   // Priors
   I0_raw ~ gamma(p_I0[1]^2/p_I0[2]^2,p_I0[1]/p_I0[2]^2);
-  //beta ~ normal(p_beta[1],p_beta[2]);
 
   for (i in 1:num_class){
     alpha[i,] ~ normal( (p_beta[1]), 0.1 ); // better informative prior --> update to more stable method for overfitting see ref. manual
@@ -138,12 +137,12 @@ model {
 
   // likelihood
   if(inference==1){
-    for (j in 1:num_class){
-      for (i in 1:num_serosurvey){
-        n_infected_survey[j,i] ~ binomial(n_tested_survey[j, i], cum_inf_frac[j,i]*sens[i] + (1-cum_inf_frac[j,i])*(1-spec[i]));
+    for (i in 1:num_class){
+      for (q in 1:num_serosurvey){
+        n_infected_survey[i,q] ~ binomial(n_tested_survey[i, q], cum_inf_frac[i,q]*sens[q] + (1-cum_inf_frac[i,q])*(1-spec[q]));
       }
-      for (i in 1:num_t){
-        target += neg_binomial_2_log_lpmf( data_pre[j,i] | log(asc_incidence[j,i]), asc_incidence[j,i]/(theta-1) );
+      for (j in 1:num_t){
+        target += neg_binomial_2_log_lpmf( data_pre[i,j] | log(asc_incidence[i,j]), asc_incidence[i,j]/(theta-1) );
       }
     }
   }
