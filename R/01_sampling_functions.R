@@ -86,8 +86,8 @@ standata <- function( data,
 
   } else {
     # Parameters for COVID-19 data from Canton of Geneva
-    fixed_pars$sens = c(0.93, 0.997,0.997)
-    fixed_pars$spec = c(1.0, 0.966,0.966)
+    fixed_pars$sens = c(0.93, 0.997, 0.997)
+    fixed_pars$spec = c(1.0, 0.966, 0.966)
     fixed_pars$ts = 1:44
     fixed_pars$num_t = 44
     fixed_pars$beta_fixed = 0.1
