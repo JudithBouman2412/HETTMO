@@ -61,7 +61,7 @@ transformed data {
   // specific parameters for stratified version
   int num_eq = num_comp*num_class;
 
-  array[8] int DIM = {num_comp, num_t, num_prev, num_age, num_sex, num_class, num_eq, num_serosurvey};
+  array[9] int DIM = {num_comp, num_t, num_prev, num_age, num_sex, num_class, 20, num_eq, num_serosurvey};
 
 }
 
@@ -89,16 +89,24 @@ transformed parameters {
   array[num_class, num_t] real asc_incidence;
 
   array[num_t] vector[num_eq] y;
-
-  y = ode_rk45_tol( seir_2d_spline,
-      rep_vector(0.0,num_eq),           // initial values = 0 (handled within the ODE)
-      t0,                               // initial time = 0
-      ts,                               // evaluation times
-      rtol, atol, max_num_steps,        // tolerances
-      I0, knots, alpha, b_hat, order,  // parameters
-      tau, gamma, contact, beta_fixed, popdist,     // data
-      DIM                               // metadata
-      );
+  if (sampler == 0 ){
+    y = ode_rk45_tol( seir_2d_spline,
+       rep_vector(0.0,num_eq),           // initial values = 0 (handled within the ODE)
+        t0,                               // initial time = 0
+        ts,                               // evaluation times
+        rtol, atol, max_num_steps,        // tolerances
+        I0, knots, alpha, b_hat, order,  // parameters
+        tau, gamma, contact, beta_fixed, popdist,     // data
+        DIM                               // metadata
+        );
+  } else if (sampler == 0 ){
+    y = solve_ode_system_trapezoidal( rep_vector(0.0,num_eq),
+                                    ts,
+                                    I0, knots, alpha, b_hat, order,
+                                    tau, gamma, contact, beta_fixed,
+                                    DIM
+                                    );
+  }
 
   // extract, rescale and format prevalence, simulate data
   asc_incidence = get_incidence(y, DIM, pi_, t_survey_start, t_survey_end);

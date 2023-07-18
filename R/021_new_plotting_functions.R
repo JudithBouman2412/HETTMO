@@ -522,76 +522,40 @@ plot_fitsim_strat = function(fit, sim_data, params=params, transmission_prob_sim
 
 
 
-plot_unstrat_BM = function(summ) {
-  cust_cols2 = c("dodgerblue","chartreuse3","orange")
-  cust_shapes = c("1"=8,
-                  "2"=7,
-                  "3"=0,
-                  "4"=6,
-                  "5"=5,
-                  "NA"=1)
-  summ = summ %>%
-    dplyr::mutate(type2=factor(type,levels=c("BM","spline","GP"),labels=c("Brownian motion","B-splines","Gaussian process")),
-                  knot_sequence=ifelse(knot_sequence=="No knots","NA",knot_sequence))
+plot_single_benchmark = function(summ) {
+
+  ggplot2::theme_set(ggplot2::theme_bw())
+  cust_cols2 = c("cyan","violet","darkgrey", "lightgreen", "purple")
+  cust_shapes = c("300"=2,
+                  "500"=0)
+
+  summ <- summ %>% rename(Tolerance = tol)
+
   g1 = summ %>%
     ggplot() +
-    geom_point(aes(x = 1/time_per_ESS, y = RMSE_prob, colour = type2, shape = knot_sequence),size=2) +
-    scale_colour_manual(values = cust_cols2,guide="none")+
+    geom_point(aes(x = 1/time_per_ESS, y = RMSE_prob, colour = solver, shape = warmup_iter),size=2) +
+    scale_colour_manual(values = cust_cols2, guide = "none", labels=c("0"="rk45","1"="Adams","2"="Bdf", "3"="ckrk","4"="Trapeziodal"))+
+    facet_grid(rows = vars(Tolerance), labeller = label_both ) +
     scale_x_continuous(trans='log10') +
-    scale_shape_manual(values=cust_shapes,guide="none") +
-    labs(x="ESS per second", y="Error" , colour=NULL, fill=NULL, shape="Knot sequence") +
+    scale_shape_manual(values=cust_shapes ) +
+    labs(x="ESS per second", y="Error" , colour="ODE solver", fill=NULL, shape="Warmup iterations") +
     # guides(shape=guide_legend(ncol=2)) +
-    theme(legend.position=c(.25,.8),
-          legend.background = element_blank())
+    theme(legend.position="bottom",  #c(.38,.9),
+          legend.background = element_blank(),text=element_text(size=16), strip.text.y = element_blank() )
 
   g2 = summ %>%
     ggplot() +
-    geom_point(aes(x = 1/time_per_ESS, y = CI_size_prob, colour = type2, shape = knot_sequence),size=2) +
-    scale_colour_manual(values = cust_cols2,guide="none")+
+    geom_point(aes(x = 1/time_per_ESS, y = CI_size_prob, colour = solver , shape = warmup_iter),size=2) +
+    scale_colour_manual(values = cust_cols2, labels=c("0"="rk45","1"="Adams","2"="Bdf", "3"="ckrk","4"="Trapeziodal"))+
+    facet_grid(rows = vars(Tolerance), labeller = label_both ) +
     scale_x_continuous(trans='log10') +
-    scale_shape_manual(values=cust_shapes) +
-    labs(x="ESS per second", y="Sharpness" , colour=NULL, fill=NULL, shape="Knot sequence") +
+    scale_shape_manual(values=cust_shapes , guide = "none") +
+    labs(x="ESS per second", y="Sharpness" , colour="ODE solver", fill=NULL, shape="Warmup iterations") +
     # guides(shape=guide_legend(ncol=2)) +
-    theme(legend.position=c(.25,.4),
-          legend.background = element_blank())
-  g = cowplot::plot_grid(g1,g2,nrow=1,labels=c("E","F"))
+    theme(legend.position="bottom", #c(.28,.86),
+          legend.background = element_blank(), text=element_text(size=16))
 
-  return(g)
-}
-
-plot_unstrat_spline = function(summ) {
-  cust_cols2 = c("dodgerblue","chartreuse3","orange")
-  cust_shapes = c("1"=8,
-                  "2"=7,
-                  "3"=0,
-                  "4"=6,
-                  "5"=5,
-                  "NA"=1)
-  summ = summ %>%
-    dplyr::mutate(type2=factor(type,levels=c("BM","spline","GP"),labels=c("Brownian motion","B-splines","Gaussian process")),
-                  knot_sequence=ifelse(knot_sequence=="No knots","NA",knot_sequence))
-  g1 = summ %>%
-    ggplot() +
-    geom_point(aes(x = 1/time_per_ESS, y = RMSE_prob, colour = type2, shape = knot_sequence),size=2) +
-    scale_colour_manual(values = cust_cols2,guide="none")+
-    scale_x_continuous(trans='log10') +
-    scale_shape_manual(values=cust_shapes,guide="none") +
-    labs(x="ESS per second", y="Error" , colour=NULL, fill=NULL, shape="Knot sequence") +
-    # guides(shape=guide_legend(ncol=2)) +
-    theme(legend.position=c(.25,.8),
-          legend.background = element_blank())
-
-  g2 = summ %>%
-    ggplot() +
-    geom_point(aes(x = 1/time_per_ESS, y = CI_size_prob, colour = type2, shape = knot_sequence),size=2) +
-    scale_colour_manual(values = cust_cols2,guide="none")+
-    scale_x_continuous(trans='log10') +
-    scale_shape_manual(values=cust_shapes) +
-    labs(x="ESS per second", y="Sharpness" , colour=NULL, fill=NULL, shape="Knot sequence") +
-    # guides(shape=guide_legend(ncol=2)) +
-    theme(legend.position=c(.25,.4),
-          legend.background = element_blank())
-  g = cowplot::plot_grid(g1,g2,nrow=1,labels=c("E","F"))
+  g = cowplot::plot_grid(g1,g2,nrow=1,labels=c("A","B"))
 
   return(g)
 }
@@ -616,7 +580,7 @@ plot_unstrat_GP = function(summ) {
     labs(x="ESS per second", y="Error" , colour=NULL, fill=NULL, shape="Knot sequence") +
     # guides(shape=guide_legend(ncol=2)) +
     theme(legend.position=c(.25,.8),
-          legend.background = element_blank())
+          legend.background = element_blank(), text=element_text(size=16))
 
   g2 = summ %>%
     ggplot() +
@@ -627,7 +591,7 @@ plot_unstrat_GP = function(summ) {
     labs(x="ESS per second", y="Sharpness" , colour=NULL, fill=NULL, shape="Knot sequence") +
     # guides(shape=guide_legend(ncol=2)) +
     theme(legend.position=c(.25,.4),
-          legend.background = element_blank())
+          legend.background = element_blank(), text=element_text(size=16))
   g = cowplot::plot_grid(g1,g2,nrow=1,labels=c("E","F"))
 
   return(g)
