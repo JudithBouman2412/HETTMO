@@ -71,7 +71,7 @@ parameters {
 
   // paremeters dependent on type of time dependence
   array[num_class, num_basis] real<lower=0> alpha;              // coefficients for spline
-  vector<lower=0, upper=1>[num_serosurvey] pi_;
+  array[num_class, num_serosurvey] real<lower=0, upper=1> pi_;
 
   //for quasi poisson model
   real<lower=1.5> theta;
@@ -135,7 +135,7 @@ model {
 
   theta ~ normal( p_theta[1], p_theta[2]);
   //fraction_pre ~ uniform(0.4, 0.6);
-  pi_ ~ uniform(0.1,0.9);
+  pi_ ~ normal(0.5,0.1);
 
   // likelihood
   if(inference==1){
