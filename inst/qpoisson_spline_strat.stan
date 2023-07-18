@@ -104,6 +104,7 @@ transformed parameters {
                                     ts,
                                     I0, knots, alpha, b_hat, order,
                                     tau, gamma, contact, beta_fixed,
+                                    popdist,
                                     DIM
                                     );
   }
