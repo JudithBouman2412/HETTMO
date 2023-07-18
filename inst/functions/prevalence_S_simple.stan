@@ -9,7 +9,7 @@ array[,] real get_incidence( array[] vector y , data array[] int DIM,
   array[num_class] vector[num_t] ascertainment_perweek;
 
   for (j in 1:num_class){
-    ascertainment_perweek[j] = rep_each( as_vector(pi_[j,]) , t_survey_end );
+    ascertainment_perweek[j] = rep_each( to_vector(pi_[j,]) , t_survey_end );
   }
 
   for (j in 1:num_class){
