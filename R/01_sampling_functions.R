@@ -194,7 +194,9 @@ create_function_initial_values <- function(data_list,
     initial_value_list$alpha=rbind(truncnorm::rtruncnorm(data_list$num_knots+2, a=0, b = Inf, ( data_list$p_beta[1]), 0.1) ,
                                    truncnorm::rtruncnorm(data_list$num_knots+2, a=0, b = Inf, ( data_list$p_beta[1]), 0.1) ,
                                    truncnorm::rtruncnorm(data_list$num_knots+2, a=0, b = Inf, ( data_list$p_beta[1]), 0.1) )
-    initial_value_list$pi_ = truncnorm::rtruncnorm(data_list$num_serosurvey, a=0, b=1, 0.5, 0.1)
+    initial_value_list$pi_ = rbind(truncnorm::rtruncnorm(data_list$num_serosurvey, a=0, b=1, 0.5, 0.1),
+                                   truncnorm::rtruncnorm(data_list$num_serosurvey, a=0, b=1, 0.5, 0.1),
+                                   truncnorm::rtruncnorm(data_list$num_serosurvey, a=0, b=1, 0.5, 0.1))
   }
 
   # parameters specific for sampling distribution
