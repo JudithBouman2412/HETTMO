@@ -191,7 +191,7 @@ generated quantities {
   // calculate effective reproduction number
   vector[num_t] R_eff;
   for (i in 1:num_t){
-    R_eff[i] = (y[i,1]/popsize) * rho[i] * beta_fixed  * (contact/gamma);
+    R_eff[i] = ((y[i,1]/popsize) * rho[i] * beta_fixed ) * (contact/gamma);
   }
 
 }

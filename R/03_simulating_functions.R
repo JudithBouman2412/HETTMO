@@ -22,7 +22,7 @@ set_parameters <- function(stratified = FALSE,
                  generation_time = 5.2/7, # assumed generation time per week
                  fraction_pre = 0.5, # distribution of generation time over I and E compartment
                  theta = 5, # overdispersion, based on quasi-poisson sampling distribution
-                 t_detectSwitch = 25 # time at which ascertainment rate switches
+                 t_detectSwitch = 20 # time at which ascertainment rate switches
                  )
 
   if (stratified){ # parameters specific for stratified data by age
@@ -39,8 +39,9 @@ set_parameters <- function(stratified = FALSE,
     params$num_class <- 3 # number of age-categories
 
   } else {
-    params$beta_fixed = 0.0638 # represents the fixed probability of transmission per contact
-    params$a = c(rep((0.058),3), (0.05), (0.03), rep((0.025),1), (0.04), rep((0.05),3), rep((0.03),5) )/0.058 # coefficients for spline to construct rho(t)
+    params$beta_fixed = 0.15 # represents the fixed probability of transmission per contact
+    params$a =c(5, 5, 1.5 ,1 ,1 ,1 ,1 ,
+                2, 2.5, 2, 2 , 1 , 1 , 1, 1 )/5  #c(rep((0.058),3), (0.05), (0.03), rep((0.025),3), (0.1), rep((0.18),3), rep((0.07),3) )/0.058 # coefficients for spline to construct rho(t)
     params$popsize = 100000 # simulated population size
     params$contact = 77 # average number of contacts per week
     params$p_detect1 = 0.1 # ascertainment rate at first time period
@@ -379,7 +380,7 @@ simulate_data <- function( params,
                                      b_support = params$b_support, t_new = i, knots = params$knots ))
     }
 
-    re <- as.vector( out[,"S"]/params$popsize * beta * params$contact / (params$gamma) )
+    re <- as.vector( (out[,"S"]/params$popsize * beta * params$beta_fixed * params$contact) / (params$gamma) )
 
     # Add sampling distribution -- Quasi Poisson
     simulation <- rqpois(length(ts), mu = incidence, theta = params$theta)
@@ -387,7 +388,8 @@ simulate_data <- function( params,
   }
 
   # calculate seroprevalence estimate
-  n_infected_survey = stats::rbinom(1, params$n_tested_survey, out[length(ts),"R"]/params$popsize )
+  n_infected_survey = c(stats::rbinom(1, params$n_tested_survey, out[params$t_detectSwitch,"R"]/params$popsize ),
+                        stats::rbinom(1, params$n_tested_survey, out[length(ts), "R"]/params$popsize ))
 
   return(list(simulation, re, beta, out[,"I"], out[,"E"], out[,"R"], n_infected_survey ) )
 }

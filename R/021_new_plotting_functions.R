@@ -20,19 +20,19 @@ plot_compare_sampling_GE = function (fit1, fit2, fit3, data, GE_data) {
   cust_cols = c("chartreuse1","chartreuse3","darkgreen")
 
   # lab-confirmed cases
-  dat_ = fit1$samples_posterior$summary(c("I_t_simulated")) %>%
+  dat_ = fit1$samples_posterior$summary(c("confirmed_cases_predicted")) %>%
     tidyr::separate(variable, "\\[|\\]", into = c("variable",
                                                   "time", "null"))
   dat_$date = data$date
-  post_1 = fit1$samples_posterior$summary(c("I_t_predicted")) %>%
+  post_1 = fit1$samples_posterior$summary(c("confirmed_cases_predicted")) %>%
     tidyr::separate(variable, "\\[|\\]", into = c("variable",
                                                   "time", "null"))
   post_1$date = data$date
-  post_2 = fit2$samples_posterior$summary(c("I_t_predicted")) %>%
+  post_2 = fit2$samples_posterior$summary(c("confirmed_cases_predicted")) %>%
     tidyr::separate(variable, "\\[|\\]", into = c("variable",
                                                   "time", "null"))
   post_2$date = data$date
-  post_3 = fit3$samples_posterior$summary(c("I_t_predicted")) %>%
+  post_3 = fit3$samples_posterior$summary(c("confirmed_cases_predicted")) %>%
     tidyr::separate(variable, "\\[|\\]", into = c("variable",
                                                   "time", "null"))
   post_3$date = data$date
