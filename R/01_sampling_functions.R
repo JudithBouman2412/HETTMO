@@ -56,17 +56,16 @@ standata <- function( data,
     fixed_pars$spec = c(1,1)
     fixed_pars$ts = 1:45
     fixed_pars$num_t = 45
-    fixed_pars$beta_fixed = 0.0638
-    fixed_pars$t_survey_start = c(25, 45) #begin_week
-    fixed_pars$t_survey_end = c(25, 45) #end_week
+    fixed_pars$beta_fixed = 0.15
+    fixed_pars$t_survey_start = c(20, 45) #begin_week
+    fixed_pars$t_survey_end = c(20, 45) #end_week
     fixed_pars$num_serosurvey = 2
 
     if (homogeneous){
       # homogeneous specific parameters
       fixed_pars$contact = 77
       fixed_pars$n_tested_survey = c(5000, 5000)
-      fixed_pars$n_infected_survey = c(sum(seroprev_dat[[1]]$num_pos_tests),
-                                       sum(seroprev_dat[[2]]$num_pos_tests))
+      fixed_pars$n_infected_survey = seroprev_dat$n_infected_survey
       fixed_pars$popsize = 100000
       fixed_pars$data_pre=data
     } else {
