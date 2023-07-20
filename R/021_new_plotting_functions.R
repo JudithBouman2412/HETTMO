@@ -241,22 +241,22 @@ plot_unstrat_benchmark = function(summ) {
 #'
 #' @examples
 plot_unstrat_model_fit = function(fit1,fit2,fit3,data_cases,data_prob,params) {
-
+  ggplot2::theme_set(ggplot2::theme_bw())
   cust_cols2 = c("dodgerblue","chartreuse3","orange")
 
-  dat_ = data.frame(variable = "I_t_simulated", time = 1:length(data_cases),
+  dat_ = data.frame(variable = "confirmed_cases_simulated", time = 1:length(data_cases),
                     null = "", median = data_cases,
                     prob_trans_sim=data_prob)
 
   # unstratified model fits
 
-  pred_1 = fit1$samples_posterior$summary(c("I_t_predicted")) %>%
+  pred_1 = fit1$samples_posterior$summary(c("confirmed_cases_predicted")) %>%
     tidyr::separate(variable, "\\[|\\]", into = c("variable", "time", "null")) %>%
     dplyr::mutate(type="Brownian motion")
-  pred_2 = fit2$samples_posterior$summary(c("I_t_predicted")) %>%
+  pred_2 = fit2$samples_posterior$summary(c("confirmed_cases_predicted")) %>%
     tidyr::separate(variable, "\\[|\\]", into = c("variable", "time", "null")) %>%
     dplyr::mutate(type="B-splines")
-  pred_3 = fit3$samples_posterior$summary(c("I_t_predicted")) %>%
+  pred_3 = fit3$samples_posterior$summary(c("confirmed_cases_predicted")) %>%
     tidyr::separate(variable, "\\[|\\]", into = c("variable", "time", "null")) %>%
     dplyr::mutate(type="Gaussian process")
   pred_all = dplyr::bind_rows(pred_1, pred_2, pred_3) %>%
@@ -280,15 +280,15 @@ plot_unstrat_model_fit = function(fit1,fit2,fit3,data_cases,data_prob,params) {
           legend.background = element_blank())
 
   # probability of transmission
-  dat_prob = data.frame(variable = "Transmission_probability",
+  dat_prob = data.frame(variable = "rho",
                         time = 1:length(data_prob), null = "", true = data_prob)
-  pred_BM_prob = fit1$samples_posterior$summary(c("prob_infection")) %>%
+  pred_BM_prob = fit1$samples_posterior$summary(c("rho")) %>%
     tidyr::separate(variable, "\\[|\\]", into = c("variable", "time", "null")) %>%
     dplyr::mutate(type="Brownian motion")
-  pred_spline_prob = fit2$samples_posterior$summary(c("prob_infection")) %>%
+  pred_spline_prob = fit2$samples_posterior$summary(c("rho")) %>%
     tidyr::separate(variable, "\\[|\\]", into = c("variable", "time", "null")) %>%
     dplyr::mutate(type="B-splines")
-  pred_GP_prob = fit3$samples_posterior$summary(c("prob_infection")) %>%
+  pred_GP_prob = fit3$samples_posterior$summary(c("rho")) %>%
     tidyr::separate(variable, "\\[|\\]", into = c("variable", "time", "null")) %>%
     dplyr::mutate(type="Gaussian process")
   prob_all = dplyr::bind_rows(pred_BM_prob, pred_spline_prob, pred_GP_prob) %>%
@@ -310,16 +310,21 @@ plot_unstrat_model_fit = function(fit1,fit2,fit3,data_cases,data_prob,params) {
     labs(shape=NULL,x="Time (weeks)",y=expression(rho(t)))
 
   # ascertainment
-  dat_asc = data.frame(variable = "Transmission_probability",
-                       time = "Week 25 to 45" , null = "", median = c(params$p_detect2))
-  asc1 = fit1$samples_posterior$summary(c("p_detect2")) %>%
-    dplyr::mutate(type="Brownian motion")
-  asc2 = fit2$samples_posterior$summary(c("p_detect2")) %>%
-    dplyr::mutate(type="B-splines")
-  asc3 = fit3$samples_posterior$summary(c("p_detect2")) %>%
-    dplyr::mutate(type="Gaussian process")
+  dat_asc = data.frame(variable = "Ascertainment rate",
+                       time = c("Week 0 to 19", "Week 20 to 45") ,
+                       null = "",
+                       median = c(params$p_detect1, params$p_detect2))
+  asc1 = fit1$samples_posterior$summary(c("pi_")) %>%
+    dplyr::mutate(type="Brownian motion",
+                  variable = "Ascertainment rate")
+  asc2 = fit2$samples_posterior$summary(c("pi_")) %>%
+    dplyr::mutate(type="B-splines",
+                  variable = "Ascertainment rate")
+  asc3 = fit3$samples_posterior$summary(c("pi_")) %>%
+    dplyr::mutate(type="Gaussian process",
+                  variable = "Ascertainment rate")
   asc_all = dplyr::bind_rows(asc1, asc2, asc3) %>%
-    dplyr::mutate(time="Week 25 to 45",
+    dplyr::mutate(time=rep(c("Week 0 to 19", "Week 20 to 45"), 3),
                   type=factor(type,levels=c("Brownian motion","B-splines","Gaussian process")))
 
   g3 = asc_all %>%
