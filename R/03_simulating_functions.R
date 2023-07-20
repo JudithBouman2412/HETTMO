@@ -32,15 +32,15 @@ set_parameters <- function(stratified = FALSE,
     params$popsize <- strat_pop[[2]] # population distribution across age-classes
     params$contact <- strat_pop[[1]] *7 # contact matrix
     params$n_tested_survey <- c(1000,2000,2000) # number of serological tests per age class in seroprevalence study
-    params$beta_fixed <- 0.15 # baseline probability of transmission per contact
+    params$beta_fixed <- 0.1 # baseline probability of transmission per contact
     params$a <- rbind(c(rep(1,2), 0.3, rep(0.2, 4), 0.4, 0.5, rep(0.4,2), rep(0.2,4)),
                       c(rep(1,2), 0.3, rep(0.2, 4), 0.4, 0.5, rep(0.4,2), rep(0.2,4)),
                       c(rep(1,2), 0.3, rep(0.2, 4), 0.4, 0.5, rep(0.4,2), rep(0.2,4))) # coefficients for spline to construct rho(t)
     params$num_class <- 3 # number of age-categories
 
   } else {
-    params$beta_fixed = 0.15 # represents the fixed probability of transmission per contact
-    params$a =c(rep(1,2), 0.3, rep(0.2, 4), 0.4, 0.5, rep(0.4,2), rep(0.2,4)) #c(rep((0.058),3), (0.05), (0.03), rep((0.025),3), (0.1), rep((0.18),3), rep((0.07),3) )/0.058 # coefficients for spline to construct rho(t)
+    params$beta_fixed = 0.1 # represents the fixed probability of transmission per contact
+    params$a =c(rep(1,2),0.57, rep(0.25, 4), 0.51, 0.54, rep(0.5,1), rep(0.27,5)) #c(rep((0.058),3), (0.05), (0.03), rep((0.025),3), (0.1), rep((0.18),3), rep((0.07),3) )/0.058 # coefficients for spline to construct rho(t)
     params$popsize = 100000 # simulated population size
     params$contact = 77 # average number of contacts per week
     params$p_detect1 = 0.1 # ascertainment rate at first time period
