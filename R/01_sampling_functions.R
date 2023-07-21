@@ -74,7 +74,8 @@ standata <- function( data,
       fixed_pars$data_pre=t(data)
       fixed_pars$popdist=contact_matrix[[2]]
       fixed_pars$contact=contact_matrix[[1]]
-      fixed_pars$n_tested_survey = c(3000,6000,6000) # 5 percent of total population was tested
+      fixed_pars$n_tested_survey = cbind(c(3000,6000,6000),
+                                         c(3000,6000,6000))# 5 percent of total population was tested
       fixed_pars$n_infected_survey = seroprev_dat
       fixed_pars$beta_fixed = 0.1
       fixed_pars$num_class = 3
