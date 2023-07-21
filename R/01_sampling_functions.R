@@ -70,7 +70,7 @@ standata <- function( data,
       fixed_pars$data_pre=data
     } else {
       # heterogeneous specific parameters
-      contact_matrix <- create_contactmatrix_GE(additional_data)
+      contact_matrix <- create_contactmatrix_GE(additional_data, tot_popsize = 300000)
       fixed_pars$data_pre=t(data)
       fixed_pars$popdist=contact_matrix[[2]]
       fixed_pars$contact=contact_matrix[[1]]
