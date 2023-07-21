@@ -73,7 +73,7 @@ standata <- function( data,
       contact_matrix <- create_contactmatrix_GE(additional_data, tot_popsize = 300000)
       fixed_pars$data_pre=t(data)
       fixed_pars$popdist=contact_matrix[[2]]
-      fixed_pars$contact=contact_matrix[[1]]
+      fixed_pars$contact=contact_matrix[[1]]*7
       fixed_pars$n_tested_survey = cbind(c(3000,6000,6000),
                                          c(3000,6000,6000))# 5 percent of total population was tested
       fixed_pars$n_infected_survey = seroprev_dat
@@ -111,7 +111,7 @@ standata <- function( data,
       # heterogeneous specific parameters
       fixed_pars$data_pre=t(data)
       fixed_pars$popdist=additional_data$pop_GE
-      fixed_pars$contact=contact_matrix[[1]]
+      fixed_pars$contact=contact_matrix[[1]]*7
       fixed_pars$t_survey_start = c(6, 14, 39) #begin_week
       fixed_pars$t_survey_end = c(10, 17, 44) #end_week
 
@@ -175,7 +175,7 @@ create_function_initial_values <- function(data_list,
     # General parameters
     initial_value_list$R0=stats::rgamma(1,data_list$p_R0[1],data_list$p_R0[2])
     initial_value_list$I0_raw=stats::rgamma(1,data_list$p_I0[1])
-    initial_value_list$pi_ = truncnorm::rtruncnorm(data_list$num_serosurvey,a=0, b=1, 0.5, 0.1)
+    initial_value_list$pi_ = stats::rbeta(data_list$num_serosurvey, 1, 1)
 
     # parameters based on method of time-dependence
     if (type=="spline"){
@@ -194,9 +194,9 @@ create_function_initial_values <- function(data_list,
     initial_value_list$alpha=rbind(truncnorm::rtruncnorm(data_list$num_knots+2, a=0, b = Inf, ( data_list$p_beta[1]), 0.1) ,
                                    truncnorm::rtruncnorm(data_list$num_knots+2, a=0, b = Inf, ( data_list$p_beta[1]), 0.1) ,
                                    truncnorm::rtruncnorm(data_list$num_knots+2, a=0, b = Inf, ( data_list$p_beta[1]), 0.1) )
-    initial_value_list$pi_ = rbind(truncnorm::rtruncnorm(data_list$num_serosurvey, a=0, b=1, 0.5, 0.1),
-                                   truncnorm::rtruncnorm(data_list$num_serosurvey, a=0, b=1, 0.5, 0.1),
-                                   truncnorm::rtruncnorm(data_list$num_serosurvey, a=0, b=1, 0.5, 0.1))
+    initial_value_list$pi_ = rbind(stats::rbeta(data_list$num_serosurvey, 1, 1),
+                                   stats::rbeta(data_list$num_serosurvey, 1, 1),
+                                   stats::rbeta(data_list$num_serosurvey, 1, 1))
   }
 
   # parameters specific for sampling distribution

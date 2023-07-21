@@ -130,7 +130,7 @@ model {
 
   for (i in 1:num_class){
     alpha[i,] ~ normal( (p_beta[1]), 0.1 ); // better informative prior --> update to more stable method for overfitting see ref. manual
-    pi_[i,] ~ normal(0.5,0.1);
+    pi_[i,] ~ beta(1,1);
   }
 
   theta ~ normal( p_theta[1], p_theta[2]);

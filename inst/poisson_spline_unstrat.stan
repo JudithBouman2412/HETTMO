@@ -128,7 +128,7 @@ model {
   I0_raw ~ gamma(p_I0[1]^2/p_I0[2]^2,p_I0[1]/p_I0[2]^2);
   R0 ~ gamma(p_R0[1],p_R0[2]);
   alpha_init ~ normal((p_R0[1]*gamma/contact)/beta_fixed, 0.1);
-  pi_ ~ normal(0.5,0.1);
+    pi_[i,] ~ beta(1,1);
 
   // poisson model
   if (inference==1) {

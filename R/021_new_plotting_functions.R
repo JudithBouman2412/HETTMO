@@ -403,23 +403,23 @@ plot_fitsim_strat = function(fit, sim_data, params=params, transmission_prob_sim
   n_tested = params$n_tested_survey
 
   # posterior predictive check
-  dat_ = rbind( data.frame(variable = "I_t_simulated",
+  dat_ = rbind( data.frame(variable = "confirmed_cases_predicted",
                            time = 1:dim(sim_data)[1],
                            age_group = "0-19 years",
                            median = sim_data[,1] ),
-                data.frame(variable = "I_t_simulated",
+                data.frame(variable = "confirmed_cases_predicted",
                            time = 1:dim(sim_data)[1],
-                           age_group = "20-59 years",
+                           age_group = "20-64 years",
                            median = sim_data[,2] ),
-                data.frame(variable = "I_t_simulated",
+                data.frame(variable = "confirmed_cases_predicted",
                            time = 1:dim(sim_data)[1],
-                           age_group = "60+ years",
+                           age_group = "65+ years",
                            median = sim_data[,3] ))
 
-  post_ = fit$samples_posterior$summary(c("I_t_predicted")) |>
+  post_ = fit$samples_posterior$summary(c("confirmed_cases_predicted")) |>
     tidyr::separate(variable,"\\[|\\]",into=c("variable","step", "NULL")) |>
-    tidyr::separate(step,",",into=c("age_group","time")) %>% mutate(age_group = ifelse(age_group==1, "0-19 years", ifelse(age_group==2, "20-59 years", "60+ years")))
-  prior_ = fit$samples_prior$summary(c("I_t_predicted")) |>
+    tidyr::separate(step,",",into=c("age_group","time")) %>% mutate(age_group = ifelse(age_group==1, "0-19 years", ifelse(age_group==2, "20-64 years", "65+ years")))
+  prior_ = fit$samples_prior$summary(c("confirmed_cases_predicted")) |>
     tidyr::separate(variable,"\\[|\\]",into=c("variable","step", "NULL")) |>
     tidyr::separate(step,",",into=c("age_group","time"))
 
@@ -429,7 +429,7 @@ plot_fitsim_strat = function(fit, sim_data, params=params, transmission_prob_sim
     tidyr::separate(variable,sep=",",into=c("d1","d2")) %>%
     dplyr::mutate(comp = as.numeric( str_sub(d2, end = -2) ) ) %>%
     dplyr::filter(comp %in% comp_4 ) %>%
-    dplyr::mutate( age_group = ifelse(comp==comp_4[1], "0-19 years", ifelse( comp==comp_4[2], "20-59 years", "60+ years") ),
+    dplyr::mutate( age_group = ifelse(comp==comp_4[1], "0-19 years", ifelse( comp==comp_4[2], "20-64 years", "65+ years") ),
                    time = rep(1:dim(sim_data)[1] , 3),
                    cum_inf_prop = ifelse(comp == comp_4[1], median/popsize[1], ifelse(comp == comp_4[2], median/popsize[2], median/popsize[3]) ),
                    cum_inf_prop_lwb = ifelse(comp == comp_4[1], q5/popsize[1], ifelse(comp == comp_4[2], q5/popsize[2], q5/popsize[3]) ),
@@ -439,8 +439,9 @@ plot_fitsim_strat = function(fit, sim_data, params=params, transmission_prob_sim
   n_infected_survey_strat = simulated_stratified[[3]]
   sim_data_3 = simulated_stratified[[1]]
 
-  serop_date = data.frame(time = c(rep(25, 3), rep(45,3)), age_group = c("0-19 years","20-59 years", "60+ years"))
-  serop_date$prop = c(rep(NA, 3,) , n_infected_survey_strat/params$n_tested_survey)
+  serop_date = data.frame(time = c(rep(25, 3), rep(45,3)), age_group = c("0-19 years","20-64 years", "65+ years"))
+  serop_date$prop = c( n_infected_survey_strat[,1]/params$n_tested_survey,
+                       n_infected_survey_strat[,2]/params$n_tested_survey )
 
   scaling = 5000
   g1_A = ggplot() +
@@ -462,24 +463,24 @@ plot_fitsim_strat = function(fit, sim_data, params=params, transmission_prob_sim
       sec.axis = sec_axis(~ . /scaling, name = "Cumulative infected",labels=scales::percent)) +
     guides(colour=FALSE, fill=FALSE)
 
-  dat_prob = rbind( data.frame(variable = "I_t_simulated",
+  dat_prob = rbind( data.frame(variable = "rho_simulated",
                                time = 1:dim(sim_data)[1],
                                age_group = "0-19 years",
                                median = transmission_prob_sim[,1] ),
-                    data.frame(variable = "I_t_simulated",
+                    data.frame(variable = "rho_simulated",
                                time = 1:dim(sim_data)[1],
-                               age_group = "20-59 years",
+                               age_group = "20-64 years",
                                median = transmission_prob_sim[,2] ),
-                    data.frame(variable = "I_t_simulated",
+                    data.frame(variable = "rho_simulated",
                                time = 1:dim(sim_data)[1],
-                               age_group = "60+ years",
+                               age_group = "65+ years",
                                median = transmission_prob_sim[,3] ))
 
-  post_prob = fit$samples_posterior$summary(c("prob_infection")) |>
+  post_prob = fit$samples_posterior$summary(c("rho")) |>
     tidyr::separate(variable,"\\[|\\]",into=c("variable","step", "NULL")) |>
     tidyr::separate(step,",",into=c("age_group","time")) %>%
-    mutate(age_group = ifelse(age_group==1, "0-19 years", ifelse(age_group==2, "20-59 years", "60+ years")))
-  prior_prob = fit$samples_prior$summary(c("prob_infection")) |>
+    mutate(age_group = ifelse(age_group==1, "0-19 years", ifelse(age_group==2, "20-64 years", "65+ years")))
+  prior_prob = fit$samples_prior$summary(c("rho")) |>
     tidyr::separate(variable,"\\[|\\]",into=c("variable","step", "NULL")) |>
     tidyr::separate(step,",",into=c("age_group","time"))
 
@@ -499,13 +500,17 @@ plot_fitsim_strat = function(fit, sim_data, params=params, transmission_prob_sim
   # plot of ascertainment rate
   # ascertainment
   dat_asc = data.frame(variable = "Transmission_probability",
-                       time = "Week 25 to 45" , null = "", median = c(params$p_detect2))
-  asc = fit$samples_posterior$summary(c("p_detect2")) %>%
-    dplyr::mutate(time = "Week 25 to 45" ,
-                  age_group = "0.19 years")
+                       time = rep(c("Week 0 to 19", "Week 20 to 45"), each = 3) ,
+                       age_group = rep(c("0-19 years", "20-64 years", "65+ years"), 2),
+                       null = "", median = c(params$p_detect1, params$p_detect2)) %>%
+    mutate(link = paste(time, age_group))
+  asc = fit$samples_posterior$summary(c("pi_")) %>%
+    dplyr::mutate(time =rep(c("Week 0 to 19", "Week 20 to 45"), each = 3),
+                  age_group = rep(c("0-19 years", "20-64 years", "65+ years"), 2),
+                  link = paste(time, age_group))
 
   g3 = asc %>%
-    left_join(dplyr::select(dat_asc,time,true=median),by = join_by(time)) %>%
+    left_join(dplyr::select(dat_asc,time,true=median, link)) %>%
     ggplot(aes(x=as.factor(time))) +
     geom_pointrange(aes(y=median,ymin=q5,ymax=q95,colour=age_group),
                     position=position_dodge(.8)) +
