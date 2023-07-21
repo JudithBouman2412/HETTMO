@@ -26,16 +26,16 @@ set_parameters <- function(stratified = FALSE,
                  )
 
   if (stratified){ # parameters specific for stratified data by age
-    strat_pop <- create_contactmatrix_GE(contact_all) # create contact matrix by age
-    params$p_detect1 = 0.3 # ascertainment rate at first time period
-    params$p_detect2 = 0.7 # ascertainment rate at second time period
+    strat_pop <- create_contactmatrix_GE(contact_all, tot_popsize=300000) # create contact matrix by age
+    params$p_detect1 = c(0.1, 0.15, 0.3 )  # ascertainment rate at first time period
+    params$p_detect2 = c(0.1, 0.5, 0.8 ) # ascertainment rate at second time period
     params$popsize <- strat_pop[[2]] # population distribution across age-classes
-    params$contact <- strat_pop[[1]] *7 # contact matrix
-    params$n_tested_survey <- c(1000,2000,2000) # number of serological tests per age class in seroprevalence study
+    params$contact <- strat_pop[[1]]*7 # contact matrix
+    params$n_tested_survey <- c(3000,6000,6000) # number of serological tests per age class in seroprevalence study
     params$beta_fixed <- 0.1 # baseline probability of transmission per contact
-    params$a <- rbind(c(rep(1,2), 0.3, rep(0.2, 4), 0.4, 0.5, rep(0.4,2), rep(0.2,4)),
-                      c(rep(1,2), 0.3, rep(0.2, 4), 0.4, 0.5, rep(0.4,2), rep(0.2,4)),
-                      c(rep(1,2), 0.3, rep(0.2, 4), 0.4, 0.5, rep(0.4,2), rep(0.2,4))) # coefficients for spline to construct rho(t)
+    params$a <- rbind(c(1,1, 0.2, 0.25, 0.25, rep(0.38, 2), 0.38, 0.38, rep(0.38,1), rep(0.25,5)),
+                      c(1,1,0.2, rep(0.2, 4), 0.3, 0.36, rep(0.36,1), rep(0.25,5)),
+                      c(1,1,0.2, rep(0.2, 6), rep(0.31,1), rep(0.25,5))) # coefficients for spline to construct rho(t)
     params$num_class <- 3 # number of age-categories
 
   } else {
@@ -43,12 +43,32 @@ set_parameters <- function(stratified = FALSE,
     params$a =c(rep(1,2),0.57, rep(0.25, 4), 0.51, 0.54, rep(0.5,1), rep(0.27,5)) #c(rep((0.058),3), (0.05), (0.03), rep((0.025),3), (0.1), rep((0.18),3), rep((0.07),3) )/0.058 # coefficients for spline to construct rho(t)
     params$popsize = 100000 # simulated population size
     params$contact = 77 # average number of contacts per week
-    params$p_detect1 = 0.1 # ascertainment rate at first time period
-    params$p_detect2 = 0.5 # ascertainment rate at second time period
+    params$p_detect1 = 0.1  # ascertainment rate at first time period
+    params$p_detect2 = 0.5  # ascertainment rate at second time period
     params$n_tested_survey = 0.05 * 100000 # number of serological tests in seroprevalence study
   }
 
   return(params)
+}
+
+#' Title
+#' Function to make a contact matrix reciprocal
+#'
+#' @param m
+#' @param N
+#'
+#' @return
+#' @export
+#'
+#' @examples
+reciprocal <- function(m, N) {
+  m_rec <- m
+  for(i in 1:length(N)) {
+    for(j in 1:length(N)) {
+      m_rec[i, j] <- (m[i, j]*N[i] + m[j, i]*N[j])/(2*N[i])
+    }
+  }
+  return(m_rec)
 }
 
 #' create_contactmatrix_GE
@@ -63,38 +83,74 @@ set_parameters <- function(stratified = FALSE,
 #' @export
 #'
 #' @examples
-create_contactmatrix_GE <- function(contact_all){
-  # create contact matrix for three groups
-  pop_2021 <- readxl::read_excel("data/su-d-01.02.03.06.xlsx", sheet = "2021")
-  pop_2021 <- data.frame(age = 0:100, n = as.numeric(pop_2021[2, 3:103]))
-  age_sent <- c(0, 19, 59) # Age groups for Sentinella
-  pop <- numeric(length(age_sent))
-  age_range <- c(age_sent, 200)
+create_contactmatrix_GE <- function(contact_all, tot_popsize = 506343){
 
-  for(i in 1:length(pop)) {
-    pop[i] <- sum(pop_2021$n[pop_2021$age >= age_range[i] & pop_2021$age < age_range[i + 1]])
-  }
-  pop_2021 <- data.frame(lower.age.limit = age_sent, population = pop)
-
-  sim_pop <- round(300000*pop_2021$population/sum(pop_2021$population),0)
-
-  pop_final <- data.frame(lower.age.limit=age_sent, population=sim_pop)
-
-  # Create hypothetical contact matrix for baseline contacts switzerland
+  # Get data from Prem et al for the baseline contact matrix of Switzerland
+  # prem uses 5 years age classes 0-4, 5-10 up to 75+
   prem <- contact_all$CHE
 
-  prem_adjusted = matrix(NA, 3, 3)
-  group_list = c(rep(1,4),
-                 rep(2,8),
-                 rep(3,4))
+  # get demographic data for CH in 2020
+  pop_2020_full <- readxl::read_excel("data/su-d-01.02.03.06.xlsx", sheet = "2020")
 
-  for (i in 1:3){
-    for (j in 1:3){
-      prem_adjusted[i,j] = sum(prem[group_list==i, group_list==j])/length(group_list[group_list==j])
+  # Get demograpics for prem age groups
+  age_prem <- seq(0, 75, 5)
+  pop_2020 <- data.frame(age = 0:100, n = as.numeric(pop_2020_full[2, 3:103]))
+
+  pop <- numeric(length(age_prem))
+  age_range <- c(age_prem, 200)
+  for(i in 1:length(pop)) {
+    pop[i] <- sum(pop_2020$n[pop_2020$age >= age_range[i] & pop_2020$age < age_range[i + 1]])
+  }
+  pop_2020_prem <- data.frame(lower.age.limit = age_prem, population = pop)
+
+  # make prem matrix reciprocal using the demographics
+  prem_2020 <- reciprocal(prem, pop_2020_prem$population)
+
+  # Get the population data from Geneva from 2020 (as we want to have the baseline)
+  # for our required age groups
+  age_required <- c(0, 19, 64)
+
+  pop_2020_GE <- pop_2020_full %>% filter(`su-d-01.02.03.06`=="- Genève"  )
+  pop_2020_GE <- data.frame(age = 0:100, n = as.numeric(pop_2020_GE[1, 3:103]))
+  pop_GE <- numeric(length(age_required))
+  age_range <- c(age_required, 200)
+
+  for(i in 1:length(pop_GE)) {
+    pop_GE[i] <- sum(pop_2020_GE$n[pop_2020_GE$age >= age_range[i] & pop_2020_GE$age < age_range[i + 1]])
+  }
+  pop_2020_GE <- data.frame(lower.age.limit = age_required, population = pop_GE)
+
+  # adjust total population size if needed for simulations
+  pop_2020_GE <- round(tot_popsize*pop_2020_GE$population/sum(pop_2020_GE$population),0)
+  pop_final <- data.frame(lower.age.limit=age_required, population=pop_2020_GE)
+
+  # Convert contact matrix from Prem et al. (2021) to required age groups
+  age1 <- age_prem
+  pop1 <- pop_2020_prem$population
+  contact1 <- prem_2020
+
+  age2 <- age_required
+  pop2 <- pop_final$population
+  contact2 <- matrix(NA, nrow = length(age2), ncol = length(age2))
+
+  age1_range <- c(age1, 200)
+  age2_range <- c(age2, 200)
+
+  for(i in 1:length(age2)) {
+    for(j in 1:length(age2)) {
+      lower_i <- age2_range[i]
+      upper_i <- age2_range[i + 1]
+      w_i <- which(age1 >= lower_i & age1 < upper_i)
+      lower_j <- age2_range[j]
+      upper_j <- age2_range[j + 1]
+      w_j <- which(age1 >= lower_j & age1 < upper_j)
+      contact2[i, j] <- sum(pop1[w_i]*contact1[w_i, w_j])/sum(pop1[w_i])
     }
   }
 
-  return(list(prem_adjusted, sim_pop))
+  prem_2020_GE <- reciprocal(contact2, pop2)
+
+  return(list(prem_2020_GE, pop_final$population))
 }
 
 #' Function with system of ODE equations for SEIR model
@@ -460,7 +516,7 @@ simulate_strat_data <- function( params,
     # Calculate incidence
     incidence = matrix(0, nrow=length(ts), ncol = params$num_class)
     for (i in 1:params$num_class){
-      incidence[,i] = get_incidence_strat(out[,ind(4,i,params$num_class)+1], params$popsize, params$p_detect1, params$p_detect2, params$t_detectSwitch)
+      incidence[,i] = get_incidence_strat(out[,ind(4,i,params$num_class)+1], params$popsize, params$p_detect1[i], params$p_detect2[i], params$t_detectSwitch)
     }
 
     # Calculate effective reproduction number
@@ -480,9 +536,13 @@ simulate_strat_data <- function( params,
   }
 
   # simulate seroprevalence data
-  n_infected_survey = rep(0,length(params$n_tested_survey))
+  n_infected_survey = cbind(rep(0,length(params$n_tested_survey)),
+                            rep(0,length(params$n_tested_survey)))
+  times = c(params$t_detectSwitch, ts[length(ts)])
   for (i in 1:length(params$n_tested_survey)){
-    n_infected_survey[i] = stats::rbinom(1, params$n_tested_survey[i], out[45,ind(4,i,params$num_class)+1]/params$popsize[i] )
+    for (j in 1:2){
+      n_infected_survey[i,j] = stats::rbinom(1, params$n_tested_survey[i], out[times[j],ind(4,i,params$num_class)+1]/params$popsize[i] )
+    }
   }
 
   return(list(simulation, beta, n_infected_survey, incidence, out) )

@@ -56,7 +56,7 @@ standata <- function( data,
     fixed_pars$spec = c(1,1)
     fixed_pars$ts = 1:45
     fixed_pars$num_t = 45
-    fixed_pars$beta_fixed = 0.15
+    fixed_pars$beta_fixed = 0.1
     fixed_pars$t_survey_start = c(20, 45) #begin_week
     fixed_pars$t_survey_end = c(20, 45) #end_week
     fixed_pars$num_serosurvey = 2
@@ -74,13 +74,13 @@ standata <- function( data,
       fixed_pars$data_pre=t(data)
       fixed_pars$popdist=contact_matrix[[2]]
       fixed_pars$contact=contact_matrix[[1]]
-      fixed_pars$n_tested_survey = c(1000,2000,2000) # 5 percent of total population was tested
+      fixed_pars$n_tested_survey = c(3000,6000,6000) # 5 percent of total population was tested
       fixed_pars$n_infected_survey = seroprev_dat
-      fixed_pars$beta_fixed = 0.052
+      fixed_pars$beta_fixed = 0.1
       fixed_pars$num_class = 3
       fixed_pars$num_age = 3
       fixed_pars$num_sex = 1
-      fixed_pars$p_beta = c(0.8,0.1)
+      fixed_pars$p_beta = c(1,0.1)
     }
 
   } else {
