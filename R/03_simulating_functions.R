@@ -27,7 +27,7 @@ set_parameters <- function(stratified = FALSE,
 
   if (stratified){ # parameters specific for stratified data by age
     strat_pop <- create_contactmatrix_GE(contact_all, tot_popsize=300000) # create contact matrix by age
-    params$p_detect1 = c(0.1, 0.15, 0.3 )  # ascertainment rate at first time period
+    params$p_detect1 = c(0.1, 0.15, 0.4 )  # ascertainment rate at first time period
     params$p_detect2 = c(0.1, 0.5, 0.8 ) # ascertainment rate at second time period
     params$popsize <- strat_pop[[2]] # population distribution across age-classes
     params$contact <- strat_pop[[1]]*7 # contact matrix
@@ -35,7 +35,7 @@ set_parameters <- function(stratified = FALSE,
     params$beta_fixed <- 0.1 # baseline probability of transmission per contact
     params$a <- rbind(c(1,1, 0.2, 0.25, 0.25, rep(0.38, 2), 0.38, 0.38, rep(0.38,1), rep(0.25,5)),
                       c(1,1,0.2, rep(0.2, 4), 0.3, 0.36, rep(0.36,1), rep(0.25,5)),
-                      c(1,1,0.2, rep(0.2, 6), rep(0.31,1), rep(0.25,5))) # coefficients for spline to construct rho(t)
+                      c(1,1,0.25, rep(0.25, 6), rep(0.33,1), rep(0.25,5))) # coefficients for spline to construct rho(t)
     params$num_class <- 3 # number of age-categories
 
   } else {
