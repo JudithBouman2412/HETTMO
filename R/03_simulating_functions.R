@@ -35,7 +35,7 @@ set_parameters <- function(stratified = FALSE,
     params$beta_fixed <- 0.1 # baseline probability of transmission per contact
     params$a <- rbind(c(1,1, 0.2, 0.25, 0.25, rep(0.38, 2), 0.38, 0.38, rep(0.38,1), rep(0.25,5)),
                       c(1,1,0.2, rep(0.2, 4), 0.3, 0.36, rep(0.36,1), rep(0.25,5)),
-                      c(1,1,0.25, rep(0.25, 6), rep(0.33,1), rep(0.25,5))) # coefficients for spline to construct rho(t)
+                      c(1,1,0.25, rep(0.25, 6), rep(0.33,2), rep(0.25,4))) # coefficients for spline to construct rho(t)
     params$num_class <- 3 # number of age-categories
 
   } else {
