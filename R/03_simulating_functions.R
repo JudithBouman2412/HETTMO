@@ -26,7 +26,7 @@ set_parameters <- function(stratified = FALSE,
                  )
 
   if (stratified){ # parameters specific for stratified data by age
-    strat_pop <- create_contactmatrix_GE(contact_all, tot_popsize=300000) # create contact matrix by age
+    strat_pop <- create_contactmatrix_GE(contact_all) # create contact matrix by age
     params$p_detect1 = c(0.1, 0.15, 0.4 )  # ascertainment rate at first time period
     params$p_detect2 = c(0.1, 0.5, 0.8 ) # ascertainment rate at second time period
     params$popsize <- strat_pop[[2]] # population distribution across age-classes
