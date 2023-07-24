@@ -182,7 +182,7 @@ model {
   // SEIR parameters
   R0 ~ gamma(p_R0[1],p_R0[2]);
   I0_raw ~ gamma(p_I0[1]^2/p_I0[2]^2,p_I0[1]/p_I0[2]^2);
-  pi_[i,] ~ beta(1,1);
+  pi_ ~ beta(1,1);
 
   // GP parameters
   beta_f1 ~ normal(0, 1);

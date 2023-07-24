@@ -154,7 +154,7 @@ model {
 
   theta ~ normal( p_theta[1], p_theta[2]);
 
-  pi_[i,] ~ beta(1,1);
+  pi_ ~ beta(1,1);
 
   // quasi poisson model
   if (inference==1) {
