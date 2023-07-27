@@ -78,12 +78,15 @@ reciprocal <- function(m, N) {
 #' and 60+.
 #'
 #' @param contact_all contact data to calculate the contact matrix using Prem et al (2021)
+#' @param tot_popsize total population size, NA if it should be the same as the actual population in 2020
+#' @param canton canton for which contact matrix should be developed
+#' @param age_required age bands for contact matrix
 #'
 #' @return List with contact matrix (1) and the simulated population (2)
 #' @export
 #'
 #' @examples
-create_contactmatrix_GE <- function(contact_all, tot_popsize = 506343){
+create_contactmatrix_GE <- function(contact_all, tot_popsize = NA, canton = "- Genève", age_required = c(0, 19, 64)){
 
   # Get data from Prem et al for the baseline contact matrix of Switzerland
   # prem uses 5 years age classes 0-4, 5-10 up to 75+
@@ -108,9 +111,7 @@ create_contactmatrix_GE <- function(contact_all, tot_popsize = 506343){
 
   # Get the population data from Geneva from 2020 (as we want to have the baseline)
   # for our required age groups
-  age_required <- c(0, 19, 64)
-
-  pop_2020_GE <- pop_2020_full %>% filter(`su-d-01.02.03.06`=="- Genève"  )
+  pop_2020_GE <- pop_2020_full %>% filter(`su-d-01.02.03.06`==canton  )
   pop_2020_GE <- data.frame(age = 0:100, n = as.numeric(pop_2020_GE[1, 3:103]))
   pop_GE <- numeric(length(age_required))
   age_range <- c(age_required, 200)
@@ -121,7 +122,10 @@ create_contactmatrix_GE <- function(contact_all, tot_popsize = 506343){
   pop_2020_GE <- data.frame(lower.age.limit = age_required, population = pop_GE)
 
   # adjust total population size if needed for simulations
-  pop_2020_GE <- round(tot_popsize*pop_2020_GE$population/sum(pop_2020_GE$population),0)
+  if (!is.na(tot_popsize)){
+    pop_2020_GE <- round(tot_popsize*pop_2020_GE$population/sum(pop_2020_GE$population),0)
+  }
+
   pop_final <- data.frame(lower.age.limit=age_required, population=pop_2020_GE)
 
   # Convert contact matrix from Prem et al. (2021) to required age groups
@@ -130,7 +134,7 @@ create_contactmatrix_GE <- function(contact_all, tot_popsize = 506343){
   contact1 <- prem_2020
 
   age2 <- age_required
-  pop2 <- pop_final$population
+  pop2 <- pop_final$population.population
   contact2 <- matrix(NA, nrow = length(age2), ncol = length(age2))
 
   age1_range <- c(age1, 200)
@@ -150,7 +154,7 @@ create_contactmatrix_GE <- function(contact_all, tot_popsize = 506343){
 
   prem_2020_GE <- reciprocal(contact2, pop2)
 
-  return(list(prem_2020_GE, pop_final$population))
+  return(list(prem_2020_GE, pop_final$population.population))
 }
 
 #' Function with system of ODE equations for SEIR model

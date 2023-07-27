@@ -169,8 +169,6 @@ create_function_initial_values <- function(data_list,
 
   initial_value_list <- list()
 
-  initial_value_list$fraction_pre=stats::runif(1,0.4,0.6)
-
   if(homogeneous){
     # General parameters
     initial_value_list$R0=stats::rgamma(1,data_list$p_R0[1],data_list$p_R0[2])
