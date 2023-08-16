@@ -152,7 +152,7 @@ model {
   I0_raw ~ gamma(p_I0[1]^2/p_I0[2]^2,p_I0[1]/p_I0[2]^2);
   alpha_init ~ gamma(2.5, 5); // C95 for rho(t): 0.08312116 1.28325020
 
-  theta ~ exp( p_theta );
+  theta ~ exponential( p_theta );
 
   pi_ ~ beta(2,2);
 
