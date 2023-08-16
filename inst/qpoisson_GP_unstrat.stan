@@ -188,7 +188,7 @@ model {
   beta_f1 ~ normal(0, 2);
   lambda_f1 ~ exponential(5);
 
-  theta ~ normal( p_theta[1], p_theta[2]);
+  theta ~ exponential( p_theta );
 
   // likelihood
   if (inference==1) {
