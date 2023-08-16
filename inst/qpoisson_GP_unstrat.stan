@@ -92,7 +92,7 @@ parameters {
   real<lower=0> lambda_f1;      // lengthscale of f1
 
   //for quasi poisson model
-  real<lower=1.5> theta;
+  real<lower=2> theta;
 }
 
 transformed parameters {
@@ -180,7 +180,7 @@ transformed parameters {
 model {
   // Priors
   // SEIR parameters
-  R0 ~ gamma(p_R0[1],p_R0[2]);
+  R0 ~ gamma(2.5,5); // to have similar prior to spline model
   I0_raw ~ gamma(p_I0[1]^2/p_I0[2]^2,p_I0[1]/p_I0[2]^2);
   pi_ ~ beta(2,2);
 
@@ -188,7 +188,7 @@ model {
   beta_f1 ~ normal(0, 1);
   lambda_f1 ~ exponential(5);
 
-  theta ~ normal( p_theta[1], p_theta[2]);
+  theta ~ exponential( p_theta );
 
   // likelihood
   if (inference==1) {

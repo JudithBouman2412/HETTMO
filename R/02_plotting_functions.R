@@ -53,19 +53,16 @@ plot_fitsim = function(fit, data, params) {
     ggplot2::theme(legend.position = "bottom", text=ggplot2::element_text(size=16)) +
     ggplot2::ylim(c(0,10000))
 
-  dat_ = data.frame(variable = "confirmed_cases_predicted", time = 1:length(data), null = "", median = data )
-  pred_ = fit$samples_posterior$summary(c("confirmed_cases_predicted")) |>
+  pred_prob = fit$samples_posterior$summary(c("rho")) |>
     tidyr::separate(variable,"\\[|\\]",into=c("variable","time","null"))
-  post_ = fit$samples_prior$summary(c("confirmed_cases_predicted")) |>
+  post_prob = fit$samples_prior$summary(c("rho")) |>
     tidyr::separate(variable,"\\[|\\]",into=c("variable","time","null"))
   g2 = ggplot2::ggplot() +
-    ggplot2::geom_ribbon(data=post_,aes(x=as.numeric(time),ymin=q5,ymax=q95,fill="Prior predictive check"),alpha=.3) +
-    ggplot2::geom_ribbon(data=pred_,aes(x=as.numeric(time),ymin=q5,ymax=q95,fill="Posterior predictive check"),alpha=.3) +
-    ggplot2::geom_line(data=pred_,aes(x=as.numeric(time),y=median),colour=col_post) +
-    ggplot2::geom_point(data=dat_,aes(x=as.numeric(time),y=median,colour="Simulated data")) +
+    ggplot2::geom_ribbon(data=post_prob,aes(x=as.numeric(time),ymin=q5,ymax=q95,fill="Prior predictive check"),alpha=.3) +
+    ggplot2::geom_ribbon(data=pred_prob,aes(x=as.numeric(time),ymin=q5,ymax=q95,fill="Posterior predictive check"),alpha=.3) +
+    ggplot2::geom_line(data=pred_prob,aes(x=as.numeric(time),y=median),colour=col_post) +
     ggplot2::scale_fill_manual(values=c("Prior predictive check"=col_prior,
                                         "Posterior predictive check"=col_post)) +
-    ggplot2::scale_colour_manual(values=c("Simulated data"=col_simul)) +
     #scale_y_continuous(trans='log10') +
     ggplot2::labs(x="Time (weeks)",y="Incidence cases",colour=NULL,fill=NULL) +
     ggplot2::theme(legend.position = "bottom", text=ggplot2::element_text(size=16))

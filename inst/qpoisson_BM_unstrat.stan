@@ -57,7 +57,7 @@ parameters {
   array[num_t-1] real eta_noise;
 
   //for quasi poisson model
-  real<lower=1.5> theta;
+  real<lower=2> theta;
 
 }
 
@@ -160,7 +160,7 @@ model {
   // Priors
   R0 ~ gamma(p_R0[1],p_R0[2]);
   I0_raw ~ gamma(p_I0[1]^2/p_I0[2]^2,p_I0[1]/p_I0[2]^2);
-  pi_ ~ beta(1,1);
+  pi_ ~ beta(2,2);
 
   // BM
   sigmaBM ~ normal(0, p_sigma_BM);

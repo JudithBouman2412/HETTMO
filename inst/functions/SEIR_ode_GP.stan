@@ -13,7 +13,7 @@ vector seir_0d_GP(real t, vector y, real I0, real beta, vector beta_f1, vector d
   row_vector[M_f1] PHI_t = ana_phi(PHI, M_f1, t, num_t, ts ); // scale ts such that l is correct? and then scale back...? Does that slow down when I do it every step?
   // compute f1
   real f1_t = PHI_t * (diagSPD_f1 .* beta_f1); // f1_t is scaled to have mean 0, multiply with intercept?=beta? take logit_inv as with spline?
-  real finf_t = beta_fixed * ((beta) + inv_logit(f1_t)) * contact * (y[3]+init[3]); // times two to have mean at beta
+  real finf_t = beta_fixed * ((beta) + inv_logit(f1_t)) * contact * (y[3]+init[3]);
   // define ODEs
   dydt[1] = -finf_t * (y[1]+init[1])/popsize;
   dydt[2] =  finf_t * (y[1]+init[1])/popsize - tau * (y[2]+init[2]);
