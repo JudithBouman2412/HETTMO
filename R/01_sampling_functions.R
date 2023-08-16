@@ -173,12 +173,11 @@ create_function_initial_values <- function(data_list,
     # General parameters
     initial_value_list$R0=stats::rgamma(1,data_list$p_R0[1],data_list$p_R0[2])
     initial_value_list$I0_raw=stats::rgamma(1,data_list$p_I0[1])
-    initial_value_list$pi_ = stats::rbeta(data_list$num_serosurvey, 1, 1)
+    initial_value_list$pi_ = stats::rbeta(data_list$num_serosurvey, 2, 2)
 
     # parameters based on method of time-dependence
     if (type=="spline"){
-      initial_value_list$alpha_init=truncnorm::rtruncnorm(data_list$num_knots+1, a = 0, b = Inf,
-                                          ( data_list$p_R0[1]*(1/(data_list$generation_time*(0.5)))/data_list$contact )/data_list$beta_fixed, 1)
+      initial_value_list$alpha_init=stats::rgamma(data_list$num_knots+1, 2.5, 5)
     } else if (type=="GP"){
       initial_value_list$beta_f1 = rnorm(data_list$M_f1)
       initial_value_list$lambda_f1 = rexp(1,5)
@@ -189,9 +188,9 @@ create_function_initial_values <- function(data_list,
   } else {
     initial_value_list$beta=rep(truncnorm::rtruncnorm(1,0,1,data_list$p_beta[1], data_list$p_beta[2]),3)
     initial_value_list$I0_raw=stats::rgamma(1,data_list$p_I0[1])
-    initial_value_list$alpha=rbind(truncnorm::rtruncnorm(data_list$num_knots+2, a=0, b = Inf, ( data_list$p_beta[1]), 0.1) ,
-                                   truncnorm::rtruncnorm(data_list$num_knots+2, a=0, b = Inf, ( data_list$p_beta[1]), 0.1) ,
-                                   truncnorm::rtruncnorm(data_list$num_knots+2, a=0, b = Inf, ( data_list$p_beta[1]), 0.1) )
+    initial_value_list$alpha=rbind( stats::rgamma(data_list$num_knots+2, 2.5, 5),
+                                    stats::rgamma(data_list$num_knots+2, 2.5, 5),
+                                    stats::rgamma(data_list$num_knots+2, 2.5, 5))
     initial_value_list$pi_ = rbind(stats::rbeta(data_list$num_serosurvey, 1, 1),
                                    stats::rbeta(data_list$num_serosurvey, 1, 1),
                                    stats::rbeta(data_list$num_serosurvey, 1, 1))
@@ -199,7 +198,7 @@ create_function_initial_values <- function(data_list,
 
   # parameters specific for sampling distribution
   if (sampling=="qp"){
-    initial_value_list$theta=truncnorm::rtruncnorm(1, a = 1.5, b=Inf, data_list$p_theta[1], data_list$p_theta[2])
+    initial_value_list$theta=rexp(1, data_list$p_theta[1] )
   } else if ( sampling =="negbin"){
     initial_value_list$phi_inv = rexp(1, data_list$p_phi)
   }
