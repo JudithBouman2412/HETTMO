@@ -21,7 +21,7 @@ data {
   // priors
   vector[2] p_I0; // expected initial seed (mean, sd)
   vector[2] p_beta; // expected beta (alpha, beta)
-  vector[2] p_theta;
+  real p_theta;
 
   // fixed quantities
   real generation_time;
@@ -133,7 +133,7 @@ model {
     pi_[i,] ~ beta(2,2);
   }
 
-  theta ~ exp( p_theta[1], p_theta[2]); // exp(1/10)
+  theta ~ exponential( p_theta ); // exp(1/10)
 
   // likelihood
   if(inference==1){

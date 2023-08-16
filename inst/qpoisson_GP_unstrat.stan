@@ -180,15 +180,15 @@ transformed parameters {
 model {
   // Priors
   // SEIR parameters
-  R0 ~ gamma(2.5,5); // to have similar prior to spline model
+  R0 ~ gamma(2.5, 5);
   I0_raw ~ gamma(p_I0[1]^2/p_I0[2]^2,p_I0[1]/p_I0[2]^2);
   pi_ ~ beta(2,2);
 
   // GP parameters
-  beta_f1 ~ normal(0, 1);
+  beta_f1 ~ normal(0, 2);
   lambda_f1 ~ exponential(5);
 
-  theta ~ exponential( p_theta );
+  theta ~ normal( p_theta[1], p_theta[2]);
 
   // likelihood
   if (inference==1) {
