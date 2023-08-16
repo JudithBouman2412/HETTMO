@@ -7,7 +7,7 @@ int popsize;
 // priors
 vector[2] p_I0; // expected initial seed (mean, sd)
 vector[2] p_R0; // expected beta (alpha, beta)
-vector[2] p_theta;
+real p_theta;
 
 // fixed quantities
 real generation_time;

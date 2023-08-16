@@ -74,7 +74,7 @@ parameters {
   array[num_class, num_serosurvey] real<lower=0, upper=1> pi_;
 
   //for quasi poisson model
-  real<lower=1.5> theta;
+  real<lower=2> theta;
 }
 
 transformed parameters {
@@ -130,10 +130,10 @@ model {
 
   for (i in 1:num_class){
     alpha[i,] ~ normal( (p_beta[1]), 0.1 ); // better informative prior --> update to more stable method for overfitting see ref. manual
-    pi_[i,] ~ beta(1,1);
+    pi_[i,] ~ beta(2,2);
   }
 
-  theta ~ normal( p_theta[1], p_theta[2]);
+  theta ~ exp( p_theta[1], p_theta[2]); // exp(1/10)
 
   // likelihood
   if(inference==1){

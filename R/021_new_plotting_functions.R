@@ -702,8 +702,9 @@ plot_single_benchmark = function(summ) {
     scale_shape_manual(values=cust_shapes ) +
     labs(x="ESS per second", y="Error" , colour="ODE solver", fill=NULL, shape="Warmup iterations") +
     # guides(shape=guide_legend(ncol=2)) +
-    theme(legend.position="bottom",  #c(.38,.9),
-          legend.background = element_blank(),text=element_text(size=16), strip.text.y = element_blank() )
+    theme(legend.position="none",  #c(.38,.9),
+          legend.background = element_blank(),text=element_text(size=16), strip.text.y = element_blank() ) +
+    guides(color=guide_legend(nrow=2, byrow=TRUE))
 
   g2 = summ %>%
     ggplot() +
@@ -714,12 +715,27 @@ plot_single_benchmark = function(summ) {
     scale_shape_manual(values=cust_shapes , guide = "none") +
     labs(x="ESS per second", y="Sharpness" , colour="ODE solver", fill=NULL, shape="Warmup iterations") +
     # guides(shape=guide_legend(ncol=2)) +
-    theme(legend.position="bottom", #c(.28,.86),
+    theme(legend.position="none", #c(.28,.86),
           legend.background = element_blank(), text=element_text(size=16))
 
-  g = cowplot::plot_grid(g1,g2,nrow=1,labels=c("A","B"))
+  gx = summ %>%
+    ggplot() +
+    geom_point(aes(x = 1/time_per_ESS, y = RMSE_prob, colour = solver, shape = warmup_iter),size=2) +
+    scale_colour_manual(values = cust_cols2, guide = "none", labels=c("0"="rk45","1"="Adams","2"="Bdf", "3"="ckrk","4"="Trapeziodal"))+
+    facet_grid(rows = vars(Tolerance), labeller = label_both ) +
+    scale_x_continuous(trans='log10') +
+    scale_shape_manual(values=cust_shapes ) +
+    labs(x="ESS per second", y="Error" , colour="ODE solver", fill=NULL, shape="Warmup iterations") +
+    theme(legend.position="bottom",
+          legend.background = element_blank(),text=element_text(size=16), strip.text.y = element_blank() ) +
+    guides(color=guide_legend(nrow=2, byrow=TRUE))
 
-  return(g)
+  leg = ggpubr::get_legend(gx)
+
+  g = cowplot::plot_grid(g1,g2, nrow=1,labels=c("A","B"))
+  gfull = cowplot::plot_grid(g, leg, nrow=2, rel_heights = c(6,1))
+
+  return(gfull)
 }
 
 plot_unstrat_GP = function(summ) {

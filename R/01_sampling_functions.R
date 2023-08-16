@@ -45,7 +45,7 @@ standata <- function( data,
 
   # parameters specific for sampling distribution
   if (sampling=="qp"){
-    priors$p_theta = c(10,10)
+    priors$p_theta = c(1/10)
   } else if ( sampling =="negbin"){
     priors$p_phi = 1
   }
