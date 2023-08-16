@@ -185,7 +185,7 @@ model {
   pi_ ~ beta(2,2);
 
   // GP parameters
-  beta_f1 ~ normal(0, 2);
+  beta_f1 ~ normal(0, 4);
   lambda_f1 ~ exponential(5);
 
   theta ~ exponential( p_theta );
