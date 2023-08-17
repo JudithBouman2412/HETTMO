@@ -39,8 +39,8 @@ set_parameters <- function(stratified = FALSE,
     params$num_class <- 3 # number of age-categories
 
   } else {
-    params$beta_fixed = 0.09 # represents the fixed probability of transmission per contact
-    params$a =c(rep(1,2),0.55, rep(0.25, 3), 0.55, 0.68, rep(0.61,1), rep(0.27,5)) #c(rep((0.058),3), (0.05), (0.03), rep((0.025),3), (0.1), rep((0.18),3), rep((0.07),3) )/0.058 # coefficients for spline to construct rho(t)
+    params$beta_fixed = 0.085 # represents the fixed probability of transmission per contact
+    params$a =c(rep(1,2),0.67, rep(0.36, 2), 0.45, 0.55, 0.55, rep(0.48,1), rep(0.4,5)) #c(rep((0.058),3), (0.05), (0.03), rep((0.025),3), (0.1), rep((0.18),3), rep((0.07),3) )/0.058 # coefficients for spline to construct rho(t)
     params$popsize = 100000 # simulated population size
     params$contact = 77 # average number of contacts per week
     params$p_detect1 = 0.3  # ascertainment rate at first time period
