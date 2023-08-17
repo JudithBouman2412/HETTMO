@@ -35,7 +35,7 @@ plot_fitsim = function(fit, data, params) {
                   cum_inf_prop_lwb = q5/params$popsize,
                   cum_inf_prop_upb = q95/params$popsize)
 
-  data_sim_sero <- data.frame(time = c(20, 45), tot_tests = c(5000, 5000), pos_test = c(274, 421) ) %>% mutate(recovered = pos_test/tot_tests*params$popsize)
+  data_sim_sero <- data.frame(time = c(20, 45), tot_tests = c(5000, 5000), pos_test = c(103, 631) ) %>% mutate(recovered = pos_test/tot_tests*params$popsize)
 
   g1 = ggplot2::ggplot() +
     ggplot2::geom_ribbon(data=post_,aes(x=as.numeric(time),ymin=q5,ymax=q95,fill="Prior predictive check"),alpha=.3) +
@@ -51,7 +51,7 @@ plot_fitsim = function(fit, data, params) {
     ggplot2::scale_colour_manual(values=c("Simulated data"=col_simul)) +
     ggplot2::labs(x="Time (weeks)",y="Incidence cases",colour=NULL,fill=NULL) +
     ggplot2::theme(legend.position = "bottom", text=ggplot2::element_text(size=16)) +
-    ggplot2::ylim(c(0,10000))
+    ggplot2::ylim(c(0,15000))
 
   pred_prob = fit$samples_posterior$summary(c("rho")) |>
     tidyr::separate(variable,"\\[|\\]",into=c("variable","time","null"))
@@ -66,7 +66,6 @@ plot_fitsim = function(fit, data, params) {
     #scale_y_continuous(trans='log10') +
     ggplot2::labs(x="Time (weeks)",y="Incidence cases",colour=NULL,fill=NULL) +
     ggplot2::theme(legend.position = "bottom", text=ggplot2::element_text(size=16))
-
 
 
   # compare prior, data and posterior

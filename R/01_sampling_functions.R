@@ -198,7 +198,7 @@ create_function_initial_values <- function(data_list,
 
   # parameters specific for sampling distribution
   if (sampling=="qp"){
-    initial_value_list$theta=rexp(1, data_list$p_theta[1] )
+    initial_value_list$theta=rexp(1, data_list$p_theta ) + 2
   } else if ( sampling =="negbin"){
     initial_value_list$phi_inv = rexp(1, data_list$p_phi)
   }
