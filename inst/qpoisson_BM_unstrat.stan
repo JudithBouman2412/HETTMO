@@ -166,7 +166,7 @@ model {
   sigmaBM ~ normal(0, p_sigma_BM);
   eta_noise ~ std_normal();
 
-  theta ~ normal( p_theta[1], p_theta[2]);
+  theta ~ exponential( p_theta );
 
   // quasi poisson model
   if (inference==1) {
