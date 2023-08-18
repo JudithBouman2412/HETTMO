@@ -36,7 +36,8 @@ plot_fitsim = function(fit, data, params) {
                   cum_inf_prop_upb = `97.5%`/params$popsize)
 
   data(simulated_nonstratified)
-  data_sim_sero <- data.frame(time = c(20, 45), tot_tests = c(5000, 5000), pos_test = simulated_nonstratified[[3]] ) %>% mutate(recovered = pos_test/tot_tests*params$popsize)
+  data_sim_sero <- data.frame(time = c(20, 45), tot_tests = c(5000, 5000), pos_test = simulated_nonstratified[[3]] ) %>%
+    mutate(recovered = pos_test/tot_tests*params$popsize)
 
   g1 = ggplot2::ggplot() +
     ggplot2::geom_ribbon(data=post_,aes(x=as.numeric(time),ymin=`2.5%`,ymax=`97.5%`,fill="Prior predictive check"),alpha=.3) +
@@ -52,7 +53,7 @@ plot_fitsim = function(fit, data, params) {
     ggplot2::scale_colour_manual(values=c("Simulated data"=col_simul)) +
     ggplot2::labs(x="Time (weeks)",y="Incidence cases",colour=NULL,fill=NULL) +
     ggplot2::theme(legend.position = "bottom", text=ggplot2::element_text(size=16)) +
-    ggplot2::ylim(c(0,15000))
+    ggplot2::ylim(c(0,27000))
 
   pred_prob = fit$samples_posterior$summary(c("rho"), median, ~quantile(.x, probs = c(0.025, 0.975))) |>
     tidyr::separate(variable,"\\[|\\]",into=c("variable","time","null"))

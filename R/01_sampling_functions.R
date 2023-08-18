@@ -56,7 +56,7 @@ standata <- function( data,
     fixed_pars$spec = c(1,1)
     fixed_pars$ts = 1:45
     fixed_pars$num_t = 45
-    fixed_pars$beta_fixed = 0.1
+    fixed_pars$beta_fixed = 0.085
     fixed_pars$t_survey_start = c(20, 45) #begin_week
     fixed_pars$t_survey_end = c(20, 45) #end_week
     fixed_pars$num_serosurvey = 2

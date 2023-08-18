@@ -20,7 +20,7 @@ plot_compare_sampling_GE = function (fit1, fit2, fit3, data, GE_data) {
   cust_cols = c("chartreuse1","chartreuse3","darkgreen")
 
   # lab-confirmed cases
-  dat_ = fit1$samples_posterior$summary(c("confirmed_cases_predicted")) %>%
+  dat_ = fit1$samples_posterior$summary(c("confirmed_cases_predicted"), median, ~quantile(.x, probs = c(0.025, 0.975)) ) %>%
     tidyr::separate(variable, "\\[|\\]", into = c("variable",
                                                   "time", "null"))
   dat_$date = data$date
@@ -250,13 +250,13 @@ plot_unstrat_model_fit = function(fit1,fit2,fit3,data_cases,data_prob,params) {
 
   # unstratified model fits
 
-  pred_1 = fit1$samples_posterior$summary(c("confirmed_cases_predicted")) %>%
+  pred_1 = fit1$samples_posterior$summary(c("confirmed_cases_predicted"), median, ~quantile(.x, probs = c(0.025, 0.975))) %>%
     tidyr::separate(variable, "\\[|\\]", into = c("variable", "time", "null")) %>%
     dplyr::mutate(type="Brownian motion")
-  pred_2 = fit2$samples_posterior$summary(c("confirmed_cases_predicted")) %>%
+  pred_2 = fit2$samples_posterior$summary(c("confirmed_cases_predicted"), median, ~quantile(.x, probs = c(0.025, 0.975))) %>%
     tidyr::separate(variable, "\\[|\\]", into = c("variable", "time", "null")) %>%
     dplyr::mutate(type="B-splines")
-  pred_3 = fit3$samples_posterior$summary(c("confirmed_cases_predicted")) %>%
+  pred_3 = fit3$samples_posterior$summary(c("confirmed_cases_predicted"), median, ~quantile(.x, probs = c(0.025, 0.975))) %>%
     tidyr::separate(variable, "\\[|\\]", into = c("variable", "time", "null")) %>%
     dplyr::mutate(type="Gaussian process")
   pred_all = dplyr::bind_rows(pred_1, pred_2, pred_3) %>%
@@ -265,7 +265,7 @@ plot_unstrat_model_fit = function(fit1,fit2,fit3,data_cases,data_prob,params) {
 
   g1 = pred_all %>%
     ggplot2::ggplot(aes(x=time)) +
-    geom_ribbon(aes(ymin = q5, ymax = q95, fill = type), alpha = 0.3) +
+    geom_ribbon(aes(ymin = `2.5%`, ymax = `97.5%`, fill = type), alpha = 0.3) +
     # geom_line(aes(y = q5, colour = type),linetype=2) +
     # geom_line(aes(y = q95, colour = type),linetype=2) +
 
@@ -282,13 +282,13 @@ plot_unstrat_model_fit = function(fit1,fit2,fit3,data_cases,data_prob,params) {
   # probability of transmission
   dat_prob = data.frame(variable = "rho",
                         time = 1:length(data_prob), null = "", true = data_prob)
-  pred_BM_prob = fit1$samples_posterior$summary(c("rho")) %>%
+  pred_BM_prob = fit1$samples_posterior$summary(c("rho"), median, ~quantile(.x, probs = c(0.025, 0.975))) %>%
     tidyr::separate(variable, "\\[|\\]", into = c("variable", "time", "null")) %>%
     dplyr::mutate(type="Brownian motion")
-  pred_spline_prob = fit2$samples_posterior$summary(c("rho")) %>%
+  pred_spline_prob = fit2$samples_posterior$summary(c("rho"), median, ~quantile(.x, probs = c(0.025, 0.975))) %>%
     tidyr::separate(variable, "\\[|\\]", into = c("variable", "time", "null")) %>%
     dplyr::mutate(type="B-splines")
-  pred_GP_prob = fit3$samples_posterior$summary(c("rho")) %>%
+  pred_GP_prob = fit3$samples_posterior$summary(c("rho"), median, ~quantile(.x, probs = c(0.025, 0.975))) %>%
     tidyr::separate(variable, "\\[|\\]", into = c("variable", "time", "null")) %>%
     dplyr::mutate(type="Gaussian process")
   prob_all = dplyr::bind_rows(pred_BM_prob, pred_spline_prob, pred_GP_prob) %>%
@@ -297,11 +297,9 @@ plot_unstrat_model_fit = function(fit1,fit2,fit3,data_cases,data_prob,params) {
 
   g2 = prob_all  %>%
     ggplot(aes(x=time)) +
-    geom_ribbon(aes(ymin=q5,ymax=q95,fill=type), alpha=.5) +
+    geom_ribbon(aes(ymin = `2.5%`, ymax = `97.5%`,fill=type), alpha=.5) +
     geom_line(aes(y=median,colour=type)) +
-
     geom_point(data=dat_prob,aes(y=true,shape="True value")) +
-
     scale_shape_manual(values=c("True value"=4)) +
     scale_fill_manual(values=cust_cols2,guide="none") +
     scale_colour_manual(values=cust_cols2,guide="none") +
