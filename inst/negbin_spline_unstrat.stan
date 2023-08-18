@@ -129,7 +129,7 @@ model {
   I0_raw ~ gamma(p_I0[1]^2/p_I0[2]^2,p_I0[1]/p_I0[2]^2);
   R0 ~ gamma(p_R0[1],p_R0[2]);
   alpha_init ~ gamma(2.5,5);
-  pi_[i,] ~ beta(2,2);
+  pi_ ~ beta(2,2);
   phi_inv ~ exponential(p_phi);
 
   // likelihood
