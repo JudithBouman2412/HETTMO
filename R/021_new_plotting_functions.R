@@ -312,13 +312,13 @@ plot_unstrat_model_fit = function(fit1,fit2,fit3,data_cases,data_prob,params) {
                        time = c("Week 0 to 19", "Week 20 to 45") ,
                        null = "",
                        median = c(params$p_detect1, params$p_detect2))
-  asc1 = fit1$samples_posterior$summary(c("pi_")) %>%
+  asc1 = fit1$samples_posterior$summary(c("pi_"), median, ~quantile(.x, probs = c(0.025, 0.975))) %>%
     dplyr::mutate(type="Brownian motion",
                   variable = "Ascertainment rate")
-  asc2 = fit2$samples_posterior$summary(c("pi_")) %>%
+  asc2 = fit2$samples_posterior$summary(c("pi_"), median, ~quantile(.x, probs = c(0.025, 0.975))) %>%
     dplyr::mutate(type="B-splines",
                   variable = "Ascertainment rate")
-  asc3 = fit3$samples_posterior$summary(c("pi_")) %>%
+  asc3 = fit3$samples_posterior$summary(c("pi_"), median, ~quantile(.x, probs = c(0.025, 0.975))) %>%
     dplyr::mutate(type="Gaussian process",
                   variable = "Ascertainment rate")
   asc_all = dplyr::bind_rows(asc1, asc2, asc3) %>%
@@ -328,7 +328,7 @@ plot_unstrat_model_fit = function(fit1,fit2,fit3,data_cases,data_prob,params) {
   g3 = asc_all %>%
     left_join(dplyr::select(dat_asc,time,true=median),by = join_by(time)) %>%
     ggplot(aes(x=as.factor(time))) +
-    geom_pointrange(aes(y=median,ymin=q5,ymax=q95,colour=type),
+    geom_pointrange(aes(y=median,ymin=`2.5%`,ymax=`97.5%`,colour=type),
                     position=position_dodge(.8)) +
     geom_point(aes(y=true,shape="True value",group=type),
                position=position_dodge(.8)) +
@@ -339,11 +339,11 @@ plot_unstrat_model_fit = function(fit1,fit2,fit3,data_cases,data_prob,params) {
           legend.background = element_blank(),
           axis.text.y = element_text(angle=90,hjust=.5)) +
     labs(shape=NULL,x=NULL,y=expression(pi[i])) +
-    coord_flip()
+    coord_flip() + ylim(c(0,0.75))
 
   gx = prob_all  %>%
     ggplot(aes(x=time)) +
-    geom_ribbon(aes(ymin=q5,ymax=q95,fill=type), alpha=.5) +
+    geom_ribbon(aes(ymin=`2.5%`,ymax=`97.5%`,fill=type), alpha=.5) +
     geom_line(aes(y=median,colour=type)) +
     scale_fill_manual(values=cust_cols2) +
     scale_colour_manual(values=cust_cols2) +

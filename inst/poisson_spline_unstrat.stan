@@ -127,7 +127,7 @@ model {
   // Priors
   I0_raw ~ gamma(p_I0[1]^2/p_I0[2]^2,p_I0[1]/p_I0[2]^2);
   R0 ~ gamma(p_R0[1],p_R0[2]);
-  alpha_init ~ normal((p_R0[1]*gamma/contact)/beta_fixed, 0.1);
+  alpha_init ~ gamma(2.5, 5);
   pi_ ~ beta(2,2);
 
   // poisson model
