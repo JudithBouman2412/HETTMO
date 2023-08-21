@@ -23,19 +23,19 @@ plot_compare_sampling_GE = function (fit1, fit2, fit3, data, GE_data) {
   dat_ = fit1$samples_posterior$summary(c("confirmed_cases_predicted"), median, ~quantile(.x, probs = c(0.025, 0.975)) ) %>%
     tidyr::separate(variable, "\\[|\\]", into = c("variable",
                                                   "time", "null"))
-  dat_$date = data$date
+  dat_$date = c(ISOweek::ISOweek2date(paste0("2020-W0",data$weeks[1], "-1")), ISOweek::ISOweek2date(paste0("2020-W",data$weeks[2:45], "-1"))) # as.Date( paste0("2020",data$weeks) , "%Y%w")
   post_1 = fit1$samples_posterior$summary(c("confirmed_cases_predicted")) %>%
     tidyr::separate(variable, "\\[|\\]", into = c("variable",
                                                   "time", "null"))
-  post_1$date = data$date
+  post_1$date = dat_$date
   post_2 = fit2$samples_posterior$summary(c("confirmed_cases_predicted")) %>%
     tidyr::separate(variable, "\\[|\\]", into = c("variable",
                                                   "time", "null"))
-  post_2$date = data$date
+  post_2$date = dat_$date
   post_3 = fit3$samples_posterior$summary(c("confirmed_cases_predicted")) %>%
     tidyr::separate(variable, "\\[|\\]", into = c("variable",
                                                   "time", "null"))
-  post_3$date = data$date
+  post_3$date = dat_$date
 
   post_1$type = "Poisson"
   post_2$type = "Quasi-Poisson"
@@ -44,19 +44,25 @@ plot_compare_sampling_GE = function (fit1, fit2, fit3, data, GE_data) {
   post_all = bind_rows(post_1,post_2,post_3)
 
   # cumulative infected
-  popsize = sum(GE_data[[5]])
+  popsize = sum(GE_data[[4]])
   serop_date = tibble(pos=NA,tested=NA,date=NA)
-  for(i in 1:3) {
+  for(i in 1:2) {
     serop_date[i,"pos"] = sum(GE_data[[i]][[1]]$num_pos_tests)
     serop_date[i,"tested"] = sum(GE_data[[i]][[1]]$num_tested)
     serop_date[i,"date"] = mean(c(lubridate::ymd(GE_data[[i]][[2]]),lubridate::ymd(GE_data[[i]][[3]])))
   }
   serop_date$prop = serop_date$pos/serop_date$tested
 
+  # test correction for plotting
+  sens = 0.93
+  spec = 1.0
+
+  serop_date$cor_prop <- (as.numeric(serop_date$prop) +spec -1) /(sens + spec -1)
+
   cum1 = fit1$samples_posterior$summary("y") %>%
     tidyr::separate(variable,sep=",",into=c("d1","d2")) %>%
     dplyr::filter(d2=="4]") %>%
-    dplyr::mutate(date=data$date,
+    dplyr::mutate(date=dat_$date,
                   type="Poisson",
                   cum_inf_prop = median/popsize,
                   cum_inf_prop_lwb = q5/popsize,
@@ -64,7 +70,7 @@ plot_compare_sampling_GE = function (fit1, fit2, fit3, data, GE_data) {
   cum2 = fit2$samples_posterior$summary("y") %>%
     tidyr::separate(variable,sep=",",into=c("d1","d2")) %>%
     dplyr::filter(d2=="4]") %>%
-    dplyr::mutate(date=data$date,
+    dplyr::mutate(date=dat_$date,
                   type="Quasi-Poisson",
                   cum_inf_prop = median/popsize,
                   cum_inf_prop_lwb = q5/popsize,
@@ -72,7 +78,7 @@ plot_compare_sampling_GE = function (fit1, fit2, fit3, data, GE_data) {
   cum3 = fit3$samples_posterior$summary("y") %>%
     tidyr::separate(variable,sep=",",into=c("d1","d2")) %>%
     dplyr::filter(d2=="4]") %>%
-    dplyr::mutate(date=data$date,
+    dplyr::mutate(date=dat_$date,
                   type="Negative-binomial",
                   cum_inf_prop = median/popsize,
                   cum_inf_prop_lwb = q5/popsize,
@@ -89,7 +95,7 @@ plot_compare_sampling_GE = function (fit1, fit2, fit3, data, GE_data) {
     geom_line(aes(y=median,colour=type)) +
     geom_point(data=dat_,aes(y=median,shape="Confirmed cases (Geneva)")) +
 
-    geom_point(data=serop_date,aes(y=prop*scaling,shape="Seroprevalence (Geneva)")) +
+    geom_point(data=serop_date,aes(y=cor_prop*scaling,shape="Seroprevalence (Geneva)")) +
     geom_ribbon(data=cum_all,aes(ymin=cum_inf_prop_lwb*scaling,ymax=cum_inf_prop_upb*scaling),fill="grey50",alpha=.3) +
     geom_line(data=cum_all,aes(y=cum_inf_prop*scaling),linetype=2,colour="grey50") +
 
