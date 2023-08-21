@@ -102,6 +102,19 @@ transformed parameters {
 
     // extract, rescale and format prevalence, simulate data
     asc_incidence = get_incidence(y, DIM, pi_, t_survey_start, t_survey_end);
+  }   if (sampler == 3 ){
+    y = ode_ckrk_tol( seir_2d_spline,
+       rep_vector(0.0,num_eq),           // initial values = 0 (handled within the ODE)
+        t0,                               // initial time = 0
+        ts,                               // evaluation times
+        rtol, atol, max_num_steps,        // tolerances
+        I0, knots, alpha, b_hat, order,  // parameters
+        tau, gamma, contact, beta_fixed, popdist,     // data
+        DIM                               // metadata
+        );
+
+    // extract, rescale and format prevalence, simulate data
+    asc_incidence = get_incidence(y, DIM, pi_, t_survey_start, t_survey_end);
   } else if (sampler == 4 ){
     y = solve_ode_system_trapezoidal_2d( rep_vector(0.0,num_eq),
                                     ts,
