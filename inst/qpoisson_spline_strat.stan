@@ -129,7 +129,7 @@ model {
   I0_raw ~ gamma(p_I0[1]^2/p_I0[2]^2,p_I0[1]/p_I0[2]^2);
 
   for (i in 1:num_class){
-    alpha[i,] ~ normal( (p_beta[1]), 0.1 ); // better informative prior --> update to more stable method for overfitting see ref. manual
+    alpha[i,] ~  gamma(2.5, 5);  // better informative prior --> update to more stable method for overfitting see ref. manual
     pi_[i,] ~ beta(2,2);
   }
 

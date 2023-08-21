@@ -20,7 +20,7 @@ data {
   // priors
   vector[2] p_I0; // expected initial seed (mean, sd)
   vector[2] p_beta; // expected beta (alpha, beta)
-  vector[2] p_theta;
+  real p_theta;
 
   // fixed quantities
   real generation_time;
@@ -147,7 +147,7 @@ model {
   beta ~ normal(p_beta[1],p_beta[2]);
 
   for (i in 1:num_class){
-    a_raw[i][] ~ normal( (p_beta[1]), 0.1 ); // better informative prior --> update to more stable method for overfitting see ref. manual
+    a_raw[i][] ~  gamma(2.5, 5);  // better informative prior --> update to more stable method for overfitting see ref. manual
   }
 
   theta ~ normal( p_theta[1], p_theta[2]);

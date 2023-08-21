@@ -420,10 +420,10 @@ plot_fitsim_strat = function(fit, sim_data, params=params, transmission_prob_sim
                            age_group = "65+ years",
                            median = sim_data[,3] ))
 
-  post_ = fit$samples_posterior$summary(c("confirmed_cases_predicted")) |>
+  post_ = fit$samples_posterior$summary(c("confirmed_cases_predicted"), median, ~quantile(.x, probs = c(0.025, 0.975))) |>
     tidyr::separate(variable,"\\[|\\]",into=c("variable","step", "NULL")) |>
     tidyr::separate(step,",",into=c("age_group","time")) %>% mutate(age_group = ifelse(age_group==1, "0-19 years", ifelse(age_group==2, "20-64 years", "65+ years")))
-  prior_ = fit$samples_prior$summary(c("confirmed_cases_predicted")) |>
+  prior_ = fit$samples_prior$summary(c("confirmed_cases_predicted"), median, ~quantile(.x, probs = c(0.025, 0.975))) |>
     tidyr::separate(variable,"\\[|\\]",into=c("variable","step", "NULL")) |>
     tidyr::separate(step,",",into=c("age_group","time"))
 
@@ -449,7 +449,7 @@ plot_fitsim_strat = function(fit, sim_data, params=params, transmission_prob_sim
 
   scaling = 5000
   g1_A = ggplot() +
-    geom_ribbon(data=post_ , aes(x=as.numeric(time),ymin=q5,ymax=q95,fill=age_group),alpha=.3) +
+    geom_ribbon(data=post_ , aes(x=as.numeric(time),ymin=`2.5%`,ymax=`97.5%`,fill=age_group),alpha=.3) +
     geom_line(data=post_ , aes(x=as.numeric(time),y=median,colour=age_group)) +
     geom_point(data=dat_, aes(x=as.numeric(time),y=median,colour=age_group,shape="Confirmed cases (simulated)") ) +
     geom_ribbon(data=cum_, aes(ymin=cum_inf_prop_lwb*scaling, ymax=cum_inf_prop_upb*scaling, x = time),fill="grey50",alpha=.3) +
@@ -480,17 +480,19 @@ plot_fitsim_strat = function(fit, sim_data, params=params, transmission_prob_sim
                                age_group = "65+ years",
                                median = transmission_prob_sim[,3] ))
 
-  post_prob = fit$samples_posterior$summary(c("rho")) |>
+  post_prob = fit$samples_posterior$summary(c("rho"), median, ~quantile(.x, probs = c(0.025, 0.975))) |>
     tidyr::separate(variable,"\\[|\\]",into=c("variable","step", "NULL")) |>
     tidyr::separate(step,",",into=c("age_group","time")) %>%
     mutate(age_group = ifelse(age_group==1, "0-19 years", ifelse(age_group==2, "20-64 years", "65+ years")))
-  prior_prob = fit$samples_prior$summary(c("rho")) |>
+  prior_prob = fit$samples_prior$summary(c("rho"), median, ~quantile(.x, probs = c(0.025, 0.975))) |>
     tidyr::separate(variable,"\\[|\\]",into=c("variable","step", "NULL")) |>
-    tidyr::separate(step,",",into=c("age_group","time"))
+    tidyr::separate(step,",",into=c("age_group","time"))%>%
+    mutate(age_group = ifelse(age_group==1, "0-19 years", ifelse(age_group==2, "20-64 years", "65+ years")))
 
   # plot of probability
   g1_B = ggplot() +
-    geom_ribbon(data=post_prob , aes(x=as.numeric(time),ymin=q5,ymax=q95,fill=age_group),alpha=.3) +
+    geom_ribbon(data=post_prob , aes(x=as.numeric(time),ymin=`2.5%`,ymax=`97.5%`,fill=age_group),alpha=.3) +
+    geom_ribbon(data=prior_prob , aes(x=as.numeric(time),ymin=`2.5%`,ymax=`97.5%`),alpha=.3,fill="grey50") +
     geom_line(data=post_prob , aes(x=as.numeric(time),y=median,colour=age_group)) +
     geom_point(data=dat_prob, aes(x=as.numeric(time),y=median,colour=age_group, shape= "True value") ) +
     facet_wrap(~age_group,ncol=1) +
