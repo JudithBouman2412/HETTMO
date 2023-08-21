@@ -111,7 +111,7 @@ create_contactmatrix_GE <- function(contact_all, tot_popsize = NA, canton = "- G
 
   # Get the population data from Geneva from 2020 (as we want to have the baseline)
   # for our required age groups
-  pop_2020_GE <- pop_2020_full %>% filter(`su-d-01.02.03.06`==canton  )
+  pop_2020_GE <- pop_2020_full[pop_2020_full$`su-d-01.02.03.06`==canton,][1,] #pop_2020_full %>% filter("`su-d-01.02.03.06`"=="Schweiz"   )
   pop_2020_GE <- data.frame(age = 0:100, n = as.numeric(pop_2020_GE[1, 3:103]))
   pop_GE <- numeric(length(age_required))
   age_range <- c(age_required, 200)
