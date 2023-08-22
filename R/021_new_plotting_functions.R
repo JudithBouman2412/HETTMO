@@ -541,14 +541,13 @@ plot_fitsim_strat = function(fit, sim_data, params=params, transmission_prob_sim
 #'
 #' @param fit
 #' @param data
-#' @param cum_inc
 #' @param params
 #'
 #' @return
 #' @export
 #'
 #' @examples
-plot_fitsim_strat_GE <- function(fit, data, cum_inc, params){
+plot_fitsim_strat_GE <- function(fit, data, params){
 
   # aesthetics
   ggplot2::theme_set(ggplot2::theme_bw())
@@ -558,69 +557,74 @@ plot_fitsim_strat_GE <- function(fit, data, cum_inc, params){
   popsize = params$popdist
   n_tested = params$n_tested_survey
 
+  dates = c(ISOweek::ISOweek2date(paste0("2020-W0",data$weeks[1], "-1")), ISOweek::ISOweek2date(paste0("2020-W",data$weeks[2:45], "-1")))
+
   # posterior predictive check
   dat_ = rbind( data.frame(variable = "GE_data",
-                           time = data$date,
+                           time = dates,
                            age_group = "0-19 years",
-                           median = data[,2] )%>% rename(median = cases_age1 ),
+                           median = data[,2] ) ,
                 data.frame(variable = "GE_data",
-                           time = data$date,
+                           time = dates,
                            age_group = "20-59 years",
-                           median = data[,3] ) %>% rename(median = cases_age2 ),
+                           median = data[,3] ) ,
                 data.frame(variable = "GE_data",
-                           time = data$date,
-                           age_group = "60+ years",
-                           median = data[,4] )%>% rename(median = cases_age3 ))
+                           time = dates,
+                           age_group = "65+ years",
+                           median = data[,4] ) )
 
-  post_ = fit$samples_posterior$summary(c("I_t_predicted")) |>
+  post_ = fit$samples_posterior$summary(c("confirmed_cases_predicted"), median, ~quantile(.x, probs = c(0.025, 0.975))) |>
     tidyr::separate(variable,"\\[|\\]",into=c("variable","step", "NULL")) |>
     tidyr::separate(step,",",into=c("age_group","time")) %>%
-    mutate(age_group = ifelse(age_group==1, "0-19 years", ifelse(age_group==2, "20-59 years", "60+ years")))
-  post_$time = dat_$time
-  prior_ = fit$samples_prior$summary(c("I_t_predicted")) |>
+    mutate(age_group = ifelse(age_group==1, "0-19 years", ifelse(age_group==2, "20-59 years", "65+ years")))
+  post_$date = rep(dates, each = 3)
+  prior_ = fit$samples_prior$summary(c("confirmed_cases_predicted"), median, ~quantile(.x, probs = c(0.025, 0.975))) |>
     tidyr::separate(variable,"\\[|\\]",into=c("variable","step", "NULL")) |>
-    tidyr::separate(step,",",into=c("age_group","time"))
-  prior_$time = dat_$time
+    tidyr::separate(step,",",into=c("age_group","time")) %>%
+    mutate(age_group = ifelse(age_group==1, "0-19 years", ifelse(age_group==2, "20-59 years", "65+ years")))
+  prior_$date = rep(dates, each = 3)
 
   # cumulative infected
   comp_4 <- c(ind(4,1,3), ind(4,2,3), ind(4,3,3))
-  cum_ = fit$samples_posterior$summary("y") %>%
+  cum_ = fit$samples_posterior$summary("y", median, ~quantile(.x, probs = c(0.025, 0.975))) %>%
     tidyr::separate(variable,sep=",",into=c("d1","d2")) %>%
     dplyr::mutate(comp = as.numeric( str_sub(d2, end = -2) ) ) %>%
     dplyr::filter(comp %in% comp_4 ) %>%
-    dplyr::mutate( age_group = ifelse(comp==comp_4[1], "0-19 years", ifelse( comp==comp_4[2], "20-59 years", "60+ years") ),
+    dplyr::mutate( age_group = ifelse(comp==comp_4[1], "0-19 years", ifelse( comp==comp_4[2], "20-59 years", "65+ years") ),
                    time = rep(data$date, 3),
                    cum_inf_prop = ifelse(comp == comp_4[1], median/popsize[1], ifelse(comp == comp_4[2], median/popsize[2], median/popsize[3]) ),
-                   cum_inf_prop_lwb = ifelse(comp == comp_4[1], q5/popsize[1], ifelse(comp == comp_4[2], q5/popsize[2], q5/popsize[3]) ),
-                   cum_inf_prop_upb = ifelse(comp == comp_4[1], q95/popsize[1], ifelse(comp == comp_4[2], q95/popsize[2], q95/popsize[3]) ) )
+                   cum_inf_prop_lwb = ifelse(comp == comp_4[1], `2.5%`/popsize[1], ifelse(comp == comp_4[2], `2.5%`/popsize[2], `2.5%`/popsize[3]) ),
+                   cum_inf_prop_upb = ifelse(comp == comp_4[1], `97.5%`/popsize[1], ifelse(comp == comp_4[2], `97.5%`/popsize[2], `97.5%`/popsize[3]) ) )
+
+  cum_$time <- rep(dates , 3)
 
   n_infected_survey_strat = params$n_infected_survey
 
   # cumulative infected
   serop_date = tibble(pos=NA,tested=NA,date=NA, age_group = NA, prop = NA)
-  age_groups = c("0-19 years", "20-59 years", "60+ years")
+  age_groups = c("0-19 years", "20-59 years", "65+ years")
   check_group = c("group1", "group2", "group3")
   for(j in 1:3) { # for loop over age:groups
-    for (i in 1:3){ # for loop over seroprevalence studies
+    for (i in 1:2){ # for loop over seroprevalence studies
       if ( dim(GE_data[[i]][[1]] %>% filter(age_group==check_group[j]))[1]>0 ){
-        serop_date[(j-1)*3 +i,"pos"] = GE_data[[i]][[1]] %>% filter(age_group==check_group[j]) %>% select(num_pos_tests)
-        serop_date[(j-1)*3 +i,"tested"] = GE_data[[i]][[1]]%>% filter(age_group==check_group[j]) %>% select(num_tested)
-        serop_date[(j-1)*3 +i,"date"] = mean(c(lubridate::ymd(GE_data[[i]][[2]]),lubridate::ymd(GE_data[[i]][[3]])))
-        serop_date[(j-1)*3 +i, "prop"] =  serop_date[(j-1)*3 +i,"pos"]/serop_date[(j-1)*3 +i,"tested"]
+        serop_date[(j-1)*2 +i,"pos"] = GE_data[[i]][[1]] %>% filter(age_group==check_group[j]) %>% select(num_pos_tests)
+        serop_date[(j-1)*2 +i,"tested"] = GE_data[[i]][[1]]%>% filter(age_group==check_group[j]) %>% select(num_tested)
+        serop_date[(j-1)*2 +i,"date"] = mean(c(lubridate::ymd(GE_data[[i]][[2]]),lubridate::ymd(GE_data[[i]][[3]])))
+        serop_date[(j-1)*2 +i, "prop"] = ( serop_date[(j-1)*2 +i,"pos"]/serop_date[(j-1)*2 +i,"tested"] + params$spec -1 ) / (params$sens + params$spec -1)
       } else {
-        serop_date[(j-1)*3 +i,"pos"] = NA
-        serop_date[(j-1)*3 +i,"tested"] = NA
-        serop_date[(j-1)*3 +i,"date"] = NA
-        serop_date[(j-1)*3 +i, "prop"] = NA
+        serop_date[(j-1)*2 +i,"pos"] = NA
+        serop_date[(j-1)*2 +i,"tested"] = NA
+        serop_date[(j-1)*2 +i,"date"] = NA
+        serop_date[(j-1)*2 +i, "prop"] = NA
       }
-      serop_date[(j-1)*3 +i, "age_group"] =  age_groups[j]
+      serop_date[(j-1)*2 +i, "age_group"] =  age_groups[j]
     }
   }
 
-  scaling = 15000
+  scaling = 20000
   g1_A = ggplot() +
-    geom_ribbon(data=post_ , aes(x=time,ymin=q5,ymax=q95,fill=age_group),alpha=.3) +
-    geom_line(data=post_ , aes(x=time,y=median,colour=age_group)) +
+    geom_ribbon(data=post_ , aes(x=date,ymin=`2.5%`,ymax=`97.5%`,fill=age_group),alpha=.3) +
+    geom_line(data=post_ , aes(x=date,y=median,colour=age_group)) +
     geom_point(data=dat_, aes(x=time,y=median,colour=age_group,shape="Confirmed cases (Geneva)") ) +
     geom_ribbon(data=cum_, aes(ymin=cum_inf_prop_lwb*scaling, ymax=cum_inf_prop_upb*scaling, x = time),fill="grey50",alpha=.3) +
     geom_line(data=cum_, aes(y=cum_inf_prop*scaling, x=time), linetype=2, colour="grey50") +
@@ -637,33 +641,37 @@ plot_fitsim_strat_GE <- function(fit, data, cum_inc, params){
       sec.axis = sec_axis(~ . /scaling, name = "Cumulative infected",labels=scales::percent)) +
     guides(colour=FALSE, fill=FALSE)
 
-  post_prob = fit$samples_posterior$summary(c("prob_infection")) |>
+  post_prob = fit$samples_posterior$summary(c("rho"), median, ~quantile(.x, probs = c(0.025, 0.975))) |>
     tidyr::separate(variable,"\\[|\\]",into=c("variable","step", "NULL")) |>
     tidyr::separate(step,",",into=c("age_group","time")) %>%
-    mutate(age_group = ifelse(age_group==1, "0-19 years", ifelse(age_group==2, "20-59 years", "60+ years")))
-  post_prob$date = rep(data$date,each = 3)
-  prior_prob = fit$samples_prior$summary(c("prob_infection")) |>
+    mutate(age_group = ifelse(age_group==1, "0-19 years", ifelse(age_group==2, "20-59 years", "65+ years")))
+  post_prob$date = rep(dates,each = 3)
+  prior_prob = fit$samples_prior$summary(c("rho"), median, ~quantile(.x, probs = c(0.025, 0.975))) |>
     tidyr::separate(variable,"\\[|\\]",into=c("variable","step", "NULL")) |>
-    tidyr::separate(step,",",into=c("age_group","time"))
-  prior_prob$date = rep(data$date,each = 3)
+    tidyr::separate(step,",",into=c("age_group","time"))%>%
+    mutate(age_group = ifelse(age_group==1, "0-19 years", ifelse(age_group==2, "20-59 years", "65+ years")))
+  prior_prob$date = rep(dates,each = 3)
 
   # plot of probability
   g1_B = ggplot() +
-    geom_ribbon(data=post_prob , aes(x=date,ymin=q5,ymax=q95,fill=age_group),alpha=.3) +
+    geom_ribbon(data=prior_prob , aes(x=date,ymin=`2.5%`,ymax=`97.5%`,fill="Prior"),alpha=.3) +
+    geom_ribbon(data=post_prob , aes(x=date,ymin=`2.5%`,ymax=`97.5%`,fill=age_group),alpha=.3) +
     geom_line(data=post_prob , aes(x=date,y=median,colour=age_group)) +
     facet_wrap(~age_group,ncol=1) +
     # add cumulative cases and the seroprevalence value
-    scale_colour_manual(values=cust_cols,guide="none") +
-    scale_fill_manual(values=cust_cols,guide="none") +
+    scale_colour_manual(values=c(cust_cols, "grey80"),guide="none") +
+    scale_fill_manual(values=c(cust_cols, "grey80"),guide="none") +
     labs(x=element_blank(),y=expression(rho(t)),shape=NULL,fill=NULL,colour=NULL) +
     theme(text=element_text(size=16), legend.position=c(.25,.25), legend.background = element_blank())
 
   # plot of ascertainment rate
   # ascertainment
-  asc = fit$samples_posterior$summary(c("p_detect1","p_detect2","p_detect3")) %>%
-    tidyr::separate(variable,sep=c(8,9,10,11),into=c("variable","seroprevalence", "d1", "age_group")) %>%
-    dplyr::mutate( age_group = ifelse(age_group == 1,  "0-19 years", ifelse(age_group==2, "20-59 years", "60+ years") ) )
-  asc$date = rep(serop_date$date[7:9], each = 3)
+  asc = fit$samples_posterior$summary(c("pi_")) %>%
+    tidyr::separate(variable,sep=c(4,5,6,7),into=c("variable", "age_group", "d1" ,"Time period")) %>%
+    dplyr::mutate( age_group = ifelse(age_group == 1,  "0-19 years", ifelse(age_group==2, "20-59 years", "65+ years") ),
+                   date = ifelse(`Time period`==1, "Spring 2020" , "Fall/Winter 2020" ))
+
+  asc$date = factor(asc$date, levels = c("Spring 2020", "Fall/Winter 2020"))
 
   g3 = asc %>% ggplot(aes(x=as.factor(date))) +
     geom_pointrange(aes(y=median,ymin=q5,ymax=q95,colour=age_group),
@@ -743,6 +751,8 @@ plot_single_benchmark = function(summ) {
 
   return(gfull)
 }
+
+
 
 plot_unstrat_GP = function(summ) {
   cust_cols2 = c("dodgerblue","chartreuse3","orange")

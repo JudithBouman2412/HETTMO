@@ -105,20 +105,19 @@ standata <- function( data,
       fixed_pars$t_survey_start = c(6, 39) #begin_week
       fixed_pars$t_survey_end = c(10, 45) #end_week
     } else {
-      contact_matrix <- create_contactmatrix_GE(additional_data$contact_all)
+      data(contact_all)
+      contact_matrix <- create_contactmatrix_GE(contact_all)
       # heterogeneous specific parameters
       fixed_pars$data_pre=t(data)
       fixed_pars$popdist=additional_data$pop_GE
       fixed_pars$contact=contact_matrix[[1]]*7
-      fixed_pars$t_survey_start = c(6, 14, 39) #begin_week
-      fixed_pars$t_survey_end = c(10, 17, 44) #end_week
+      fixed_pars$t_survey_start = c(6, 39) #begin_week
+      fixed_pars$t_survey_end = c(10, 45) #end_week
 
       fixed_pars$n_infected_survey = cbind(additional_data$sero_1[[1]]$num_pos_tests,
-                                           c(0,additional_data$sero_2[[1]]$num_pos_tests),
-                                           c(0,additional_data$sero_3[[1]]$num_pos_tests))
+                                           additional_data$sero_2[[1]]$num_pos_tests)
       fixed_pars$n_tested_survey = cbind(additional_data$sero_1[[1]]$num_tested,
-                                         c(0,additional_data$sero_2[[1]]$num_tested),
-                                         c(0,additional_data$sero_3[[1]]$num_tested))
+                                         additional_data$sero_2[[1]]$num_tested)
       fixed_pars$num_class = 3
       fixed_pars$num_age = 3
       fixed_pars$num_sex = 1
@@ -135,7 +134,7 @@ standata <- function( data,
   } else if (type=="GP"){
 
     fixed_pars$M_f1 = 15
-    fixed_pars$c_f1 = 1
+    fixed_pars$c_f1 = 1.5
 
   } else if (type=="BM"){
     fixed_pars$p_sigma_BM=0.1
