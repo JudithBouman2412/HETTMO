@@ -1,5 +1,20 @@
 # functions to simulate data using the spline-based time-implementation
 
+#' Index finder
+#'
+#' @param comp the compartment of the S (1) I (2) E (3) R (4) of which the index is required
+#' @param age_sex the required stratification class
+#' @param num_class the total number of classes in the model (4)
+#'
+#' @return
+#' @export
+#'
+#' @examples
+ind <- function( comp, age_sex, num_class=4){
+  return(age_sex+(comp-1)*num_class)
+}
+
+
 #' set_parameters
 #'
 #' Function to create set of parameters to simulate data as presented in the
@@ -51,8 +66,7 @@ set_parameters <- function(stratified = FALSE,
   return(params)
 }
 
-#' Title
-#' Function to make a contact matrix reciprocal
+#' reciprocal function to make a contact matrix reciprocal (written by Christian Althaus)
 #'
 #' @param m
 #' @param N
@@ -75,7 +89,7 @@ reciprocal <- function(m, N) {
 #'
 #' Function to construct a contact matrix based on Prem et al. (2021) for Switzerland and the age
 #' distribution of the Canton of Geneva (2021). Age groups are fixed at 0-19, 20-59
-#' and 60+.
+#' and 60+. (inspired by code from Christian Althaus)
 #'
 #' @param contact_all contact data to calculate the contact matrix using Prem et al (2021)
 #' @param tot_popsize total population size, NA if it should be the same as the actual population in 2020
@@ -552,25 +566,3 @@ simulate_strat_data <- function( params,
   return(list(simulation, beta, n_infected_survey, incidence, out) )
 }
 
-
-#' reciprocal
-#'
-#' Function to rebalance contactmatrix based on the number of individuals in each
-#' class
-#'
-#' @param m original contact matrix
-#' @param N vector with number of individuals per age-class
-#'
-#' @return rebalanced contact matrix
-#' @export
-#'
-#' @examples
-reciprocal <- function(m, N) {
-  m_rec <- matrix(NA, nrow = length(N), ncol = length(N))
-  for(i in 1:length(N)) {
-    for(j in 1:length(N)) {
-      m_rec[i, j] <- (m[i, j]*N[i] + m[j, i]*N[j])/(2*N[i])
-    }
-  }
-  return(m_rec)
-}

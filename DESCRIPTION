@@ -4,9 +4,9 @@ Version: 0.0.0.9000
 Authors@R: c(person("Judith", "Bouman", email="judith.bouman@unibe.ch", role = c("cre", "aut"), comment = c(ORCID = "0000-0003-3781-0675")), 
      person("Julien", "Riou", role = c("aut"), comment = c(ORCID = "0000-0002-3808-2852")),
      person("Anthony", "Hauser", role = c("aut"),  comment = c(ORCID="0000-0002-7221-1929")) )
-Description: This package supplies functions that can efficiently implement time-dependent 
+Description: This package supplies functions that can efficiently implement time-varying 
       transmission in a stratified SEIR model in Stan. It includes three different methods of 
-      implementing the time dependence: Brownian motion, splines and a Gausian process. More 
+      implementing the time dependence: Brownian motion, B-splines and Gausian processes. More 
       details on the model can be found in the publication linked to this R-package (LINK). 
 License: GPL (>= 3)
 Encoding: UTF-8

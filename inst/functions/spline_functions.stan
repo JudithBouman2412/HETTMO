@@ -1,3 +1,6 @@
+// Spline functions are taken from Milad Kharratzadeh`s publication
+// "splines in Stan" https://mc-stan.org/users/documentation/case-studies/splines_in_stan.html.
+
 vector build_b_spline(array[] real t, data vector ext_knots, data int index, data int order);
 vector build_b_spline(array[] real t, data vector ext_knots, data int index, data int order){
   // INPUTS:
@@ -24,6 +27,10 @@ vector build_b_spline(array[] real t, data vector ext_knots, data int index, dat
   }
   return b_spline;
 }
+
+// these additional spline functions are used to find polynomial descriptions of the splines
+// to use within the ODE-solver
+
 matrix find_support( data vector ext_knots, data int order, data vector knots, data int num_basis ){
     int num_interval = size(knots)-1;
     // define t for which polynomal is well defined for each b-spline
