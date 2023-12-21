@@ -7,4 +7,11 @@ It includes three methods for implementing the time-varying transmission: Browni
 
 The package relies on functionality of cmdstanR.
 
-More information can be found in this pre-print: LINK ADDED AFTER PRE-PRINT GOT ACCEPTED AT BIORXIV. 
+More information can be found in [this pre-print](https://doi.org/10.1101/2023.10.09.23296742).
+
+
+TO DO:
+
+add instructions on how to change the age-groups. 
+
+add instructions on how to adapt the modelled ODE-system. 
