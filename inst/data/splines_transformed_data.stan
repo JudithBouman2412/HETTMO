@@ -28,7 +28,7 @@ matrix[num_basis, num_int] B;
 for (indicator in 1:num_basis){
   B[indicator,:] = to_row_vector(build_b_spline( int_knots, ext_knots, indicator, spline_degree + 1));
 }
-B[num_knots + spline_degree - 1, num_int] = 1; // --> this is in the manual, but I do not understand why...
+B[num_knots + spline_degree - 1, num_int] = 1; //
 
 // find support for each spline
 matrix[num_basis, (num_knots-1) ] support_bs = find_support( ext_knots, order, knots, num_basis );
