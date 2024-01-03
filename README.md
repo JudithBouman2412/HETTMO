@@ -21,4 +21,5 @@ add instructions on how to adapt the modelled ODE-system.
 To install the package directly from Github, you can use:
 
 library(devtools)
+
 install_github("JudithBouman2412/HETTMO")
