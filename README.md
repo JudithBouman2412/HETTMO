@@ -16,7 +16,7 @@ add instructions on how to change the age-groups.
 
 add instructions on how to adapt the modelled ODE-system. 
 
-## Install package
+**Install package**
 
 To install the package directly from Github, you can use:
 
