@@ -97,7 +97,7 @@ matrix ana_B( data matrix B, data vector ext_knots, data array[] real int_knots,
     // fit polynomal for each b_spline at the interval at which it is defined
     for (i in 1:num_basis){
       for (j in 1:num_interval){
-        if (support_bs[i,j]){
+        if (support_bs[i,j] != 0){
           b_hat[i,((j-1)*order+1):(j*order)] = to_row_vector( find_poly(int_knots[((j-1)*(order-1)+1):((order-1)*j+1)], B[i,((j-1)*(order-1)+1):((order-1)*j+1)]) ); //extend to use any degree/order
         }
       }
